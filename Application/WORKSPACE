@@ -1,3 +1,7 @@
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+# BEGIN android devkits rules
+
 android_ndk_repository(
     name = "androidndk",
     path = "/home/maxim/Android/Sdk/ndk/20.1.5948944",
@@ -6,4 +10,49 @@ android_ndk_repository(
 android_sdk_repository(
     name = "androidsdk",
     path = "/home/maxim/Android/Sdk",
+)
+
+# END android devkits rules
+
+# BEGIN io_bazel_rules_kotlin
+
+RULES_KOTLIN_VERSION = "9051eb053f9c958440603d557316a6e9fda14687"
+
+http_archive(
+    name = "io_bazel_rules_kotlin",
+    sha256 = "c36e71eec84c0e17dd098143a9d93d5720e81b4db32bceaf2daf939252352727",
+    strip_prefix = "rules_kotlin-%s" % RULES_KOTLIN_VERSION,
+    url = "https://github.com/bazelbuild/rules_kotlin/archive/%s.tar.gz" % RULES_KOTLIN_VERSION,
+)
+
+load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kotlin_repositories", "kt_register_toolchains")
+
+kotlin_repositories()
+
+kt_register_toolchains()
+
+# END io_bazel_rules_kotlin
+
+
+RULES_JVM_EXTERNAL_TAG = "3.0"
+RULES_JVM_EXTERNAL_SHA = "62133c125bf4109dfd9d2af64830208356ce4ef8b165a6ef15bbff7460b35c3a"
+
+http_archive(
+    name = "rules_jvm_external",
+    strip_prefix = "rules_jvm_external-%s" % RULES_JVM_EXTERNAL_TAG,
+    sha256 = RULES_JVM_EXTERNAL_SHA,
+    url = "https://github.com/bazelbuild/rules_jvm_external/archive/%s.zip" % RULES_JVM_EXTERNAL_TAG,
+)
+
+load("@rules_jvm_external//:defs.bzl", "maven_install")
+
+maven_install(
+    artifacts = [
+        "androidx.appcompat:appcompat:1.0.2",
+        "androidx.core:core-ktx:1.0.1",
+    ],
+    repositories = [
+        "https://maven.google.com",
+        "https://repo1.maven.org/maven2",
+    ],
 )

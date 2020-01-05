@@ -8,14 +8,15 @@
       android:targetSdkVersion="28" />
 
   <application
-      android:label="Bazel Tutorial App">
-    <activity
-        android:name=".MainActivity"
-        android:label="Bazel Tutorial App" >
-      <intent-filter>
-        <action android:name="android.intent.action.MAIN" />
-        <category android:name="android.intent.category.LAUNCHER" />
-      </intent-filter>
-    </activity>
-  </application>
+        android:label="rules_jvm_external Kotlin App">
+        <activity
+            android:name=".MainActivity"
+            android:theme="@style/AppTheme"
+            android:label="rules_jvm_external Kotlin App">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
 </manifest>
