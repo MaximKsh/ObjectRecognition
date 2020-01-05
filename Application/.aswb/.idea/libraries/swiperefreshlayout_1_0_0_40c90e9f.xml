@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="swiperefreshlayout-1.0.0_40c90e9f">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/.blaze/aar_libraries/swiperefreshlayout-1.0.0_8b3cb1cb.aar/jars/classes_and_libs_merged.jar!/" />
+      <root url="file://$PROJECT_DIR$/.blaze/aar_libraries/swiperefreshlayout-1.0.0_8b3cb1cb.aar/res" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

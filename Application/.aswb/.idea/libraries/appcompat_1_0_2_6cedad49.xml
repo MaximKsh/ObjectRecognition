@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="appcompat-1.0.2_6cedad49">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/.blaze/aar_libraries/appcompat-1.0.2_5a4d83a7.aar/jars/classes_and_libs_merged.jar!/" />
+      <root url="file://$PROJECT_DIR$/.blaze/aar_libraries/appcompat-1.0.2_5a4d83a7.aar/res" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

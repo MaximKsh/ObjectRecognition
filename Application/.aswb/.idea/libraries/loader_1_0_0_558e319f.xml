@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="loader-1.0.0_558e319f">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/.blaze/aar_libraries/loader-1.0.0_a2131213.aar/jars/classes_and_libs_merged.jar!/" />
+      <root url="file://$PROJECT_DIR$/.blaze/aar_libraries/loader-1.0.0_a2131213.aar/res" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

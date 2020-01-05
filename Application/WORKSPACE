@@ -1,0 +1,9 @@
+android_ndk_repository(
+    name = "androidndk",
+    path = "/home/maxim/Android/Sdk/ndk/20.1.5948944",
+)
+
+android_sdk_repository(
+    name = "androidsdk",
+    path = "/home/maxim/Android/Sdk",
+)
