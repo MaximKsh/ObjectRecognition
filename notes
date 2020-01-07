@@ -1,0 +1,6 @@
+Compile desktop mediapipe example
+bazel-1.2.1 build --define MEDIAPIPE_DISABLE_GPU=1 //Desktop/HelloMediapipe:HelloMediapipe
+
+Run it
+export GLOG_logtostderr=1
+./bazel-bin/Desktop/HelloMediapipe/HelloMediapipe
