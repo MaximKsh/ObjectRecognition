@@ -1,4 +1,4 @@
-workspace(name="ObjectRecognition") 
+workspace(name = "ObjectRecognition")
 
 # BEGIN android devkits rules
 
@@ -39,12 +39,13 @@ kt_register_toolchains()
 # BEGIN android maven
 
 RULES_JVM_EXTERNAL_TAG = "3.0"
+
 RULES_JVM_EXTERNAL_SHA = "62133c125bf4109dfd9d2af64830208356ce4ef8b165a6ef15bbff7460b35c3a"
 
 http_archive(
     name = "rules_jvm_external",
-    strip_prefix = "rules_jvm_external-%s" % RULES_JVM_EXTERNAL_TAG,
     sha256 = RULES_JVM_EXTERNAL_SHA,
+    strip_prefix = "rules_jvm_external-%s" % RULES_JVM_EXTERNAL_TAG,
     url = "https://github.com/bazelbuild/rules_jvm_external/archive/%s.zip" % RULES_JVM_EXTERNAL_TAG,
 )
 
@@ -67,8 +68,8 @@ maven_install(
 
 git_repository(
     name = "mediapipe_repository",
+    commit = "a007fdccb6a88920e99a9154e5679024b12b9f6d",
     remote = "https://github.com/google/mediapipe.git",
-    commit = "a007fdccb6a88920e99a9154e5679024b12b9f6d"
 )
 
 # Complete mediapipe workspace file is listed below
@@ -86,8 +87,11 @@ http_archive(
 )
 
 load("@bazel_skylib//lib:versions.bzl", "versions")
-versions.check(minimum_bazel_version = "0.24.1",
-               maximum_bazel_version = "1.2.1")
+
+versions.check(
+    minimum_bazel_version = "0.24.1",
+    maximum_bazel_version = "1.2.1",
+)
 
 # ABSL cpp library lts_2019_08_08.
 http_archive(
@@ -387,3 +391,9 @@ http_archive(
 )
 
 # END mediapipe
+
+new_local_repository(
+    name = "poco_linux",
+    build_file = "//ThirdParty:poco_linux.BUILD",
+    path = "/usr",
+)
