@@ -9,6 +9,7 @@ import com.google.mediapipe.components.FrameProcessor
 import com.google.mediapipe.components.PermissionHelper
 import com.google.mediapipe.framework.AndroidAssetUtil
 import com.google.mediapipe.glutil.EglManager
+import com.google.mediapipe.framework.Graph
 
 
 class MainActivity : AppCompatActivity() {
@@ -17,7 +18,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         this.setContentView(R.layout.activity_main)
 
-        // val graph = new Graph();
+        val graph = Graph();
 
     }
 
