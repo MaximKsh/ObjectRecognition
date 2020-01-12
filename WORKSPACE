@@ -55,12 +55,41 @@ maven_install(
     artifacts = [
         "androidx.appcompat:appcompat:1.0.2",
         "androidx.core:core-ktx:1.0.1",
+        "androidx.annotation:annotation:aar:1.1.0",
+        #"androidx.appcompat:appcompat:aar:1.1.0-rc01",
+        "androidx.camera:camera-core:aar:1.0.0-alpha06",
+        "androidx.camera:camera-camera2:aar:1.0.0-alpha06",
+        "androidx.constraintlayout:constraintlayout:aar:1.1.3",
+        "androidx.core:core:aar:1.1.0-rc03",
+        "androidx.legacy:legacy-support-v4:aar:1.0.0",
+        "androidx.recyclerview:recyclerview:aar:1.1.0-beta02",
+        "com.google.android.material:material:aar:1.0.0-rc01",
     ],
     repositories = [
         "https://maven.google.com",
         "https://repo1.maven.org/maven2",
+        "https://dl.google.com/dl/android/maven2",
     ],
 )
+
+#maven_install(
+#    artifacts = [
+#        "androidx.annotation:annotation:aar:1.1.0",
+#        "androidx.appcompat:appcompat:aar:1.1.0-rc01",
+#        "androidx.camera:camera-core:aar:1.0.0-alpha06",
+#        "androidx.camera:camera-camera2:aar:1.0.0-alpha06",
+#        "androidx.constraintlayout:constraintlayout:aar:1.1.3",
+#        "androidx.core:core:aar:1.1.0-rc03",
+#        "androidx.legacy:legacy-support-v4:aar:1.0.0",
+#        "androidx.recyclerview:recyclerview:aar:1.1.0-beta02",
+#        "com.google.android.material:material:aar:1.0.0-rc01",
+#    ],
+#    repositories = [
+#
+#        "https://repo1.maven.org/maven2",
+#    ],
+#)
+#
 
 # END android maven
 
@@ -68,12 +97,12 @@ maven_install(
 
 git_repository(
     name = "mediapipe_repository",
-    commit = "a007fdccb6a88920e99a9154e5679024b12b9f6d",
+    commit = "bf5185f122d4858c209becde3a6f750b0f1dc3c0",
     remote = "https://github.com/google/mediapipe.git",
 )
 
-# Complete mediapipe workspace file is listed below
-# The reason is all dependencies (even transitive) must be specified explicitly
+## Complete mediapipe workspace file is listed below
+## The reason is all dependencies (even transitive) must be specified explicitly
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
@@ -287,25 +316,8 @@ http_archive(
     url = "https://github.com/bazelbuild/rules_jvm_external/archive/%s.zip" % RULES_JVM_EXTERNAL_TAG,
 )
 
-load("@rules_jvm_external//:defs.bzl", "maven_install")
-
-maven_install(
-    artifacts = [
-        "androidx.annotation:annotation:aar:1.1.0",
-        "androidx.appcompat:appcompat:aar:1.1.0-rc01",
-        "androidx.camera:camera-core:aar:1.0.0-alpha06",
-        "androidx.camera:camera-camera2:aar:1.0.0-alpha06",
-        "androidx.constraintlayout:constraintlayout:aar:1.1.3",
-        "androidx.core:core:aar:1.1.0-rc03",
-        "androidx.legacy:legacy-support-v4:aar:1.0.0",
-        "androidx.recyclerview:recyclerview:aar:1.1.0-beta02",
-        "com.google.android.material:material:aar:1.0.0-rc01",
-    ],
-    repositories = [
-        "https://dl.google.com/dl/android/maven2",
-        "https://repo1.maven.org/maven2",
-    ],
-)
+#load("@rules_jvm_external//:defs.bzl", "maven_install")
+#
 
 maven_server(
     name = "google_server",

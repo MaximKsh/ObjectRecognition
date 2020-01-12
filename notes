@@ -7,3 +7,7 @@ export GLOG_logtostderr=1
 
 
 bazel-2+ unsupported
+
+
+
+bazel mobile-install //android
