@@ -5,4 +5,12 @@
              android:layout_width="match_parent"
              android:layout_height="match_parent"
              tools:context=".MainActivity"
-             tools:ignore="MergeRootFrame,UnusedIds" />
+             tools:ignore="MergeRootFrame,UnusedIds" >
+
+    <TextView
+        android:id="@+id/outputTv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="24dp"
+        android:text="Hello" />
+</FrameLayout>

@@ -11,3 +11,16 @@ cc_library(
     ],
     alwayslink = 1,
 )
+
+cc_library(
+    name = "echo_calculator",
+    srcs = ["EchoCalculator.cpp"],
+    visibility = [
+        "//visibility:public",
+    ],
+    deps = [
+        "@mediapipe_repository//mediapipe/framework:calculator_framework",
+        "@mediapipe_repository//mediapipe/framework/port:status",
+    ],
+    alwayslink = 1,
+)

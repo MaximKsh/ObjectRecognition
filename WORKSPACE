@@ -72,25 +72,6 @@ maven_install(
     ],
 )
 
-#maven_install(
-#    artifacts = [
-#        "androidx.annotation:annotation:aar:1.1.0",
-#        "androidx.appcompat:appcompat:aar:1.1.0-rc01",
-#        "androidx.camera:camera-core:aar:1.0.0-alpha06",
-#        "androidx.camera:camera-camera2:aar:1.0.0-alpha06",
-#        "androidx.constraintlayout:constraintlayout:aar:1.1.3",
-#        "androidx.core:core:aar:1.1.0-rc03",
-#        "androidx.legacy:legacy-support-v4:aar:1.0.0",
-#        "androidx.recyclerview:recyclerview:aar:1.1.0-beta02",
-#        "com.google.android.material:material:aar:1.0.0-rc01",
-#    ],
-#    repositories = [
-#
-#        "https://repo1.maven.org/maven2",
-#    ],
-#)
-#
-
 # END android maven
 
 # BEGIN mediapipe

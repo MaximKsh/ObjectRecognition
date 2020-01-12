@@ -5,7 +5,7 @@ cc_binary(
     linkshared = 1,
     linkstatic = 1,
     deps = [
-        "@mediapipe_repository//mediapipe/graphs/edge_detection:mobile_calculators",
+        "//Calculators:echo_calculator",
         "@mediapipe_repository//mediapipe/java/com/google/mediapipe/framework/jni:mediapipe_framework_jni",
     ],
 )
@@ -16,9 +16,23 @@ cc_library(
     alwayslink = 1,
 )
 
+# Maps the binary graph to an alias (e.g., the app name) for convenience so that the alias can be
+# easily incorporated into the app via, for example,
+# MainActivity.BINARY_GRAPH_NAME = "appname.binarypb".
+genrule(
+    name = "binary_graph",
+    srcs = ["//Graphs:mobile_cpu_binary_graph"],
+    outs = ["mobile_binary_graph.binarypb"],
+    cmd = "cp $< $@",
+)
+
 kt_android_library(
     name = "lib",
     srcs = glob(["*.kt"]),
+    assets = [
+        ":binary_graph",
+    ],
+    assets_dir = "",
     custom_package = "com.kshmax.objectrecognition",
     manifest = "AndroidManifest.xml",
     resource_files = glob(["res/**"]),
