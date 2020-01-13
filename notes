@@ -1,15 +1,121 @@
-Compile desktop mediapipe example
+
+DESKTOP
+Compile desktop mediapipe example:
 bazel-1.2.1 build --define MEDIAPIPE_DISABLE_GPU=1 //Desktop/HelloMediapipe:HelloMediapipe
 
-Run it
+Run it:
 export GLOG_logtostderr=1
 ./bazel-bin/Desktop/HelloMediapipe/HelloMediapipe
 
 
-bazel-2+ unsupported
-
-
+MOBILE
 bazel-1.2.1 mobile-install --start_app -c opt --config=android_arm64 Android/src/main:app
 
 
+About project structure:
+WORKSPACE file contains all project dependencies:
+* Kotlin
+* SDK/NDK
+* Android deps from maven
+* Mediapipe (from git repo) and ALL it's dependencies (feature of bazel, it requires specify all transitive deps explicitly)
+* POCO for linux and android (for http requests from calculator)
+* LIBC for android
+
+./BUILD file contains run configuration (such as android, android64, x86). It's important because some of
+ThirdParty libs vary from configuration
+
+.bazelrc contains build options
+
+/ThirdParty contains BUILD files for some external libs (poco, libc). *.BUILD files are added to project
+into WORKSPACE file as new_local_repository and then are specified into ThirdParty/BUILD file.
+
+/mediapipe/* is copypaste subtree of directories from original repo which can't be used from there and
+need to be copypasted. (I don't know why right now). For example, mediapipe_graph.bzl won't load from mediapipe_repo.
+
+Android - android app
+
+Desktop - desktop apps
+
+Calculators - own calculators
+
+Graphs - own graphs
+
+
+
+NOTES ABOUT POCO:
+Desktop:
+It works well with default ubuntu-repo installation
+Mobile:
+1. Create custom ndk toolchains using script from ndk
+./Sdk/ndk/20.1.5948944/build/tools/make-standalone-toolchain.sh --arch=arm --install-dir=./toolchain/arm
+or
+./Sdk/ndk/20.1.5948944/build/tools/make-standalone-toolchain.sh --arch=arm64 --install-dir=./toolchain/arm64
+(I have arm emu and arm64 device)
+
+2. Add it to path
+export PATH=$PATH:/home/maxim/Android/toolchain/arm64/bin
+
+3. Clone poco repo
+git clone https://github.com/pocoproject/poco.git
+
+4. Edit poco/build/config/Android
+
+4.1 Set LINKMODE ?= SHARED
+
+4.2 Add some extra androidabi's
+ifeq ($(ANDROID_ABI),armeabi)
+TOOL      = arm-linux-androideabi
+ARCHFLAGS = -mthumb
+else
+ifeq ($(ANDROID_ABI),armeabi-v7a)
+TOOL      = arm-linux-androideabi
+ARCHFLAGS = -march=armv7-a -mfloat-abi=softfp
+LINKFLAGS = -Wl,--fix-cortex-a8
+else
+ifeq ($(ANDROID_ABI),x86)
+TOOL      = i686-linux-android
+ARCHFLAGS = -march=i686 -msse3 -mstackrealign -mfpmath=sse
+else
+ifeq ($(ANDROID_ABI),x86_64)
+TOOL      = x86_64-linux-android
+ARCHFLAGS = -msse3 -mstackrealign -mfpmath=sse
+else
+ifeq ($(ANDROID_ABI),arm64-v8a)
+TOOL      = aarch64-linux-android
+ARCHFLAGS = -march=armv8-a
+else
+$(error Invalid ABI specified in ANDROID_ABI)
+endif
+endif
+endif
+endif
+endif
+
+4.3 Set SYSLIBS  = -lstdc++  (last line)
+
+4.4 Then configure and build it
+./configure --config=Android --no-samples --no-tests
+make -s -j4 ANDROID_ABI=arm64-v8a
+
+4.5 Libraries are located into poco/lib/Android/arm64-v8a/
+Headers are located into poco/Foundation/include, poco/Net/include, etc
+
+4.6 Now it can be used into C++ code in android application. See poco_android.BUILD. Also it must be
+imported into kt_android_library:
+exports = [
+    "//ThirdParty:libc",
+    "//ThirdParty:poco"
+],
+
+4.7 Libc is not a part of startard lib and must be imported explicitly. It is located into ndk toolchain
+toolchain/arm64/sysroot/usr/lib. Add new_local_repository, then cc_library in ThirdParty dir.
+
+4.8 App must have permission to do a http requests
+in manifest
+<uses-permission android:name="android.permission.INTERNET" />
+<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+and
+<application
+        ...
+        android:usesCleartextTraffic="true">
 
