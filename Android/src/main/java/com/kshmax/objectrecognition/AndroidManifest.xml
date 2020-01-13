@@ -7,8 +7,10 @@
       android:minSdkVersion="21"
       android:targetSdkVersion="28" />
 
+
   <application
-        android:label="rules_jvm_external Kotlin App">
+        android:label="rules_jvm_external Kotlin App"
+        android:usesCleartextTraffic="true">
         <activity
             android:name=".MainActivity"
             android:theme="@style/AppTheme"

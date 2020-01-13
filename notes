@@ -10,3 +10,6 @@ bazel-2+ unsupported
 
 
 bazel-1.2.1 mobile-install --start_app -c opt --config=android_arm64 Android/src/main:app
+
+
+

@@ -1,8 +1,8 @@
 #include "mediapipe/framework/calculator_framework.h"
-#include <Poco/URI.h>
 #include <Poco/Net/HTTPClientSession.h>
 #include <Poco/Net/HTTPRequest.h>
 #include <Poco/Net/HTTPResponse.h>
+#include <Poco/URI.h>
 
 class HttpTestCalculator : public mediapipe::CalculatorBase {
 public:

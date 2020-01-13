@@ -3,7 +3,7 @@ package(default_visibility = ["//visibility:public"])
 cc_library(
     name = "mobile_calculators",
     deps = [
-        "//Calculators:echo_calculator",
+        "//Calculators:http_test_calculator",
     ],
 )
 

@@ -390,3 +390,15 @@ new_local_repository(
     build_file = "//ThirdParty:poco_linux.BUILD",
     path = "/usr",
 )
+
+new_local_repository(
+    name = "poco_android",
+    build_file = "//ThirdParty:poco_android.BUILD",
+    path = "/home/maxim/Projects/poco",
+)
+
+new_local_repository(
+    name = "libc_android",
+    build_file = "//ThirdParty:libc_android.BUILD",
+    path = "/home/maxim/Android/toolchain/arm64/sysroot/usr/lib",
+)

@@ -1,18 +1,18 @@
 package com.kshmax.objectrecognition
 
-import android.content.res.AssetManager
 import android.os.Bundle
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.google.mediapipe.framework.Graph
-import com.google.mediapipe.framework.Packet
 import com.google.mediapipe.framework.PacketCreator
 import com.google.mediapipe.framework.PacketGetter
+import java.io.BufferedInputStream
+import java.io.InputStream
+import java.net.HttpURLConnection
+import java.net.URL
 
 
 class MainActivity : AppCompatActivity() {
-
-    private val BINARY_GRAPH_NAME = "mobile_binary_graph.binarypb"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,7 +27,9 @@ class MainActivity : AppCompatActivity() {
 
         graph.addPacketCallback("out") {
             val res = PacketGetter.getString(it)
-            outputTv.text = res
+            this@MainActivity.runOnUiThread {
+                outputTv.text = res
+            }
         }
         graph.startRunningGraph()
 
@@ -43,6 +45,11 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         init {
+//            System.loadLibrary("PocoEncodings")
+//            System.loadLibrary("PocoFoundation")
+//            System.loadLibrary("PocoNet")
+//            System.loadLibrary("PocoXML")
+//            System.loadLibrary("PocoJSON")
             System.loadLibrary("mediapipe_jni")
         }
     }

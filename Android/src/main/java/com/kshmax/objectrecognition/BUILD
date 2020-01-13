@@ -3,9 +3,8 @@ load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kt_android_library")
 cc_binary(
     name = "libmediapipe_jni.so",
     linkshared = 1,
-    linkstatic = 1,
     deps = [
-        "//Calculators:echo_calculator",
+        "//Calculators:http_test_calculator",
         "@mediapipe_repository//mediapipe/java/com/google/mediapipe/framework/jni:mediapipe_framework_jni",
     ],
 )
@@ -39,6 +38,8 @@ kt_android_library(
     visibility = ["//visibility:public"],
     exports = [
         ":mediapipe_jni_lib",
+        "//ThirdParty:libc",
+        "//ThirdParty:poco",
         "@mediapipe_repository//third_party:opencv",
     ],
     deps = [
