@@ -32,7 +32,7 @@ kt_android_library(
         ":binary_graph",
     ],
     assets_dir = "",
-    custom_package = "com.kshmax.objectrecognition",
+    custom_package = "com.kshmax.httptest",
     manifest = "AndroidManifest.xml",
     resource_files = glob(["res/**"]),
     visibility = ["//visibility:public"],
@@ -52,7 +52,6 @@ kt_android_library(
         "@maven//:androidx_fragment_fragment",
         "@maven//:androidx_lifecycle_lifecycle_common",
         "@maven//:androidx_lifecycle_lifecycle_viewmodel",
-        "@mediapipe_repository//mediapipe/java/com/google/mediapipe/components:android_camerax_helper",
         "@mediapipe_repository//mediapipe/java/com/google/mediapipe/components:android_components",
         "@mediapipe_repository//mediapipe/java/com/google/mediapipe/framework:android_framework",
         "@mediapipe_repository//mediapipe/java/com/google/mediapipe/glutil",
@@ -61,7 +60,7 @@ kt_android_library(
 )
 
 android_binary(
-    name = "objectrecognition",
+    name = "httptest",
     manifest = "AndroidManifest.xml",
     deps = [":lib"],
 )

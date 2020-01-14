@@ -119,3 +119,10 @@ and
         ...
         android:usesCleartextTraffic="true">
 
+
+
+
+
+
+TODO:
+figure out what's wrong with the file mediapipe_graph.bzl and why it can'be imported from @mediapipe_repository

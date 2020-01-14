@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.kshmax.objectrecognition"
+    package="com.kshmax.httptest"
     android:versionCode="1"
     android:versionName="1.0" >
 
@@ -11,12 +11,12 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
-        android:label="rules_jvm_external Kotlin App"
+        android:label="httptest"
         android:usesCleartextTraffic="true">
         <activity
             android:name=".MainActivity"
             android:theme="@style/AppTheme"
-            android:label="rules_jvm_external Kotlin App">
+            android:label="httptest">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

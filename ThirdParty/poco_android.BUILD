@@ -22,10 +22,15 @@ cc_library(
     name = "poco_arm64-v8a",
     srcs = [
         "lib/Android/arm64-v8a/libPocoEncodings.so",
+        "lib/Android/arm64-v8a/libPocoEncodings.so.64",
         "lib/Android/arm64-v8a/libPocoFoundation.so",
+        "lib/Android/arm64-v8a/libPocoFoundation.so.64",
         "lib/Android/arm64-v8a/libPocoJSON.so",
+        "lib/Android/arm64-v8a/libPocoJSON.so.64",
         "lib/Android/arm64-v8a/libPocoNet.so",
+        "lib/Android/arm64-v8a/libPocoNet.so.64",
         "lib/Android/arm64-v8a/libPocoXML.so",
+        "lib/Android/arm64-v8a/libPocoXML.so.64",
     ],
     hdrs = glob([
         "Encodings/include/Poco/*.h",
