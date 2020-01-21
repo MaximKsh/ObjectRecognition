@@ -7,10 +7,16 @@
              tools:context=".MainActivity"
              tools:ignore="MergeRootFrame,UnusedIds" >
 
-    <TextView
-        android:id="@+id/outputTv"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textSize="24dp"
-        android:text="Hello" />
+    <FrameLayout
+        android:id="@+id/preview_display_layout"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_weight="1">
+        <TextView
+            android:id="@+id/no_camera_access_view"
+            android:layout_height="fill_parent"
+            android:layout_width="fill_parent"
+            android:gravity="center"
+            android:text="no_camera_access" />
+    </FrameLayout>
 </FrameLayout>

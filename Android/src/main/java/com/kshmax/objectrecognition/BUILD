@@ -4,7 +4,7 @@ cc_binary(
     name = "libmediapipe_jni.so",
     linkshared = 1,
     deps = [
-        "//Calculators:http_test_calculator",
+        "//Graphs:object_recognition_mobile_calculators",
         "@mediapipe_repository//mediapipe/java/com/google/mediapipe/framework/jni:mediapipe_framework_jni",
     ],
 )
@@ -20,7 +20,7 @@ cc_library(
 # MainActivity.BINARY_GRAPH_NAME = "appname.binarypb".
 genrule(
     name = "binary_graph",
-    srcs = ["//Graphs:mobile_cpu_binary_graph"],
+    srcs = ["//Graphs:object_recognition_mobile_binary_graph"],
     outs = ["mobile_binary_graph.binarypb"],
     cmd = "cp $< $@",
 )
@@ -30,6 +30,8 @@ kt_android_library(
     srcs = glob(["*.kt"]),
     assets = [
         ":binary_graph",
+        "@mediapipe_repository//mediapipe/models:ssdlite_object_detection.tflite",
+        "@mediapipe_repository//mediapipe/models:ssdlite_object_detection_labelmap.txt",
     ],
     assets_dir = "",
     custom_package = "com.kshmax.objectrecognition",
