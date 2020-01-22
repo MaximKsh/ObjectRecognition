@@ -1,3 +1,5 @@
+package(default_visibility = ["//visibility:public"])
+
 load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kt_android_library")
 
 cc_binary(

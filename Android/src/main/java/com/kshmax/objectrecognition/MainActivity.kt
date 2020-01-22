@@ -16,6 +16,7 @@ import com.google.mediapipe.components.ExternalTextureConverter
 import com.google.mediapipe.components.FrameProcessor
 import com.google.mediapipe.components.PermissionHelper
 import com.google.mediapipe.framework.AndroidAssetUtil
+import com.google.mediapipe.framework.Graph
 import com.google.mediapipe.framework.PacketCreator
 import com.google.mediapipe.framework.PacketGetter
 import com.google.mediapipe.glutil.EglManager
@@ -131,7 +132,7 @@ class MainActivity : AppCompatActivity() {
     private var eglManager: EglManager? = null
     // Sends camera-preview frames into a MediaPipe graph for processing, and displays the processed
     // frames onto a {@link Surface}.
-    private var processor: FrameProcessor? = null
+    private var processor: MyFrameProcessor? = null
 
     // Converts the GL_TEXTURE_EXTERNAL_OES texture from Android camera into a regular texture to be
     // consumed by {@link FrameProcessor} and the underlying MediaPipe graph.
@@ -153,16 +154,22 @@ class MainActivity : AppCompatActivity() {
         // binary graphs.
         AndroidAssetUtil.initializeNativeAssetManager(this)
 
+        val graph = Graph()
+        assets.open(BINARY_GRAPH_NAME).use {
+            val graphBytes = it.readBytes()
+            graph.loadBinaryGraph(graphBytes)
+        }
+
         eglManager = EglManager(null)
-        processor = FrameProcessor(
+        processor = MyFrameProcessor(
                 this,
                 eglManager!!.nativeContext,
-                BINARY_GRAPH_NAME,
+                graph,
                 INPUT_VIDEO_STREAM_NAME,
                 OUTPUT_VIDEO_STREAM_NAME)
         processor!!.videoSurfaceOutput.setFlipY(FLIP_FRAMES_VERTICALLY)
 
-        val labels = LABELS.split("\n")
+        /*val labels = LABELS.split("\n")
         processor!!.addPacketCallback("labels") {
             val arr = PacketGetter.getInt32Vector(it)
             var answers = ArrayList<String>()
@@ -181,7 +188,7 @@ class MainActivity : AppCompatActivity() {
 
             processor!!.graph.addPacketToInputStream("labels_with_values", labels_packet, it.timestamp + 1)
 
-        }
+        }*/
 
         PermissionHelper.checkAndRequestCameraPermissions(this)
 

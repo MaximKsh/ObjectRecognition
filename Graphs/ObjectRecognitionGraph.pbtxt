@@ -1,5 +1,5 @@
 input_stream: "input_video"
-input_stream: "labels_with_values"
+input_stream: "second_input"
 output_stream: "output_video"
 output_stream: "labels"
 
@@ -19,12 +19,14 @@ output_stream: "labels"
 node {
   calculator: "FlowLimiterCalculator"
   input_stream: "input_video"
+  input_stream: "second_input"
   input_stream: "FINISHED:detections"
   input_stream_info: {
     tag_index: "FINISHED"
     back_edge: true
   }
   output_stream: "throttled_input_video"
+  output_stream: "throttled_second_input"
 }
 
 # Transforms the input image on GPU to a 320x320 image. To scale the image, by
@@ -136,20 +138,22 @@ node {
   }
 }
 
+node {
+  calculator: "GpuBufferToImageFrameCalculator"
+  input_stream: "throttled_input_video"
+  output_stream: "image_frame_gpu"
+}
+
+
 # Maps detection label IDs to the corresponding label text. The label map is
 # provided in the label_map_path option.
 node {
   calculator: "DetectionToTextCalculator"
   input_stream: "filtered_detections"
-  #input_stream: "LABELS_IN:labels_with_values_side"
+  # input_stream: "INPUT_FRAME_GPU:image_frame_gpu"
+  input_stream: "SECOND:throttled_second_input"
   output_stream: "output_detections"
   output_stream: "LABELS_OUT:labels"
-}
-
-node {
-  calculator: "LabelProviderCalculator"
-  input_stream: "labels_with_values"
-  output_stream: "labels_with_values_side"
 }
 
 # Converts the detections to drawing primitives for annotation overlay.

@@ -1,3 +1,5 @@
+package(default_visibility = ["//visibility:public"])
+
 load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kt_android_library")
 
 cc_binary(
@@ -25,9 +27,11 @@ genrule(
     cmd = "cp $< $@",
 )
 
+
+
 kt_android_library(
     name = "lib",
-    srcs = glob(["*.kt"]),
+    srcs = glob(["*.kt", "*.java"]),
     assets = [
         ":binary_graph",
         "@mediapipe_repository//mediapipe/models:ssdlite_object_detection.tflite",
