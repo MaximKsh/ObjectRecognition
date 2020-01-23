@@ -5,6 +5,7 @@ cc_library(
     srcs = ["DetectionToTextCalculator.cpp"],
     visibility = ["//visibility:public"],
     deps = [
+        "//ThirdParty:poco",
         "@mediapipe_repository//mediapipe/framework:calculator_framework",
         "@mediapipe_repository//mediapipe/framework:packet",
         "@mediapipe_repository//mediapipe/framework/formats:detection_cc_proto",

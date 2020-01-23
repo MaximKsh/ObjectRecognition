@@ -35,6 +35,7 @@ cc_library(
     hdrs = glob([
         "Encodings/include/Poco/*.h",
         "Foundation/include/Poco/*.h",
+        "Foundation/include/Poco/Dynamic/*.h",
         "JSON/include/Poco/JSON/*.h",
         "Net/include/Poco/Net/*.h",
         "XML/include/Poco/XML/*.h",

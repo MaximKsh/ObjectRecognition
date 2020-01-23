@@ -150,7 +150,7 @@ node {
 node {
   calculator: "DetectionToTextCalculator"
   input_stream: "filtered_detections"
-  # input_stream: "INPUT_FRAME_GPU:image_frame_gpu"
+  input_stream: "INPUT_FRAME_GPU:image_frame_gpu"
   input_stream: "SECOND:throttled_second_input"
   output_stream: "output_detections"
   output_stream: "LABELS_OUT:labels"

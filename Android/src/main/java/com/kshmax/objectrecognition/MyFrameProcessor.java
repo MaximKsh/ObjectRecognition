@@ -231,7 +231,6 @@ public class MyFrameProcessor implements TextureFrameProcessor {
 
     Packet imagePacket = packetCreator.createGpuBuffer(frame);
     Packet stringPacket = packetCreator.createString("TestString");
-    packetCreator.create
 
     try {
       // addConsumablePacketToInputStream allows the graph to take exclusive ownership of the

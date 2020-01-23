@@ -240,6 +240,7 @@ class MainActivity : AppCompatActivity() {
                                 // display size.
                                 converter!!.setSurfaceTextureAndAttachToGLContext(
                                         previewFrameTexture, displaySize.width, displaySize.height)
+
                             }
 
                             override fun surfaceDestroyed(holder: SurfaceHolder) {
