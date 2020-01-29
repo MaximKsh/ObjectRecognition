@@ -402,3 +402,11 @@ new_local_repository(
     build_file = "//ThirdParty:libc_android.BUILD",
     path = "/home/maxim/Android/toolchain/arm64/sysroot/usr/lib",
 )
+
+load("//ThirdParty/Android:android_configure.bzl", "android_configure")
+
+android_configure(name = "local_config_android")
+
+load("@local_config_android//:android.bzl", "android_workspace")
+
+android_workspace()

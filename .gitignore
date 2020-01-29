@@ -2,3 +2,4 @@
 bazel-*
 .clwb
 .idea
+*/.ipynb_checkpoints
