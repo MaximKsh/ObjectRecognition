@@ -1,0 +1,13 @@
+syntax = "proto2";
+
+package objectrecognition;
+
+import "mediapipe/framework/calculator_options.proto";
+
+message DetectionFilterCalculatorOptions {
+  extend mediapipe.CalculatorOptions {
+    optional DetectionFilterCalculatorOptions ext = 350607623;
+  }
+
+  repeated int32 pass_id = 2;
+}

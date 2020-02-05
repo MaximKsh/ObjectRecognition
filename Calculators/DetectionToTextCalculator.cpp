@@ -143,12 +143,12 @@ REGISTER_CALCULATOR(DetectionToTextCalculator);
     cc->Inputs().Get("", 0).Set<std::vector<::mediapipe::Detection>>();
     cc->Outputs().Get("", 0).Set<std::vector<::mediapipe::Detection>>();
 
-    cc->Inputs().Tag("INPUT_FRAME_GPU").Set<mediapipe::ImageFrame>();
-
-    if (cc->Inputs().HasTag("SECOND")) {
-        cc->Inputs().Tag("SECOND").SetAny();
-    }
-    cc->Outputs().Tag("LABELS_OUT").Set<std::vector<int32_t>>();
+//    cc->Inputs().Tag("INPUT_FRAME_GPU").Set<mediapipe::ImageFrame>();
+//
+//    if (cc->Inputs().HasTag("SECOND")) {
+//        cc->Inputs().Tag("SECOND").SetAny();
+//    }
+//    cc->Outputs().Tag("LABELS_OUT").Set<std::vector<int32_t>>();
 
     return ::mediapipe::OkStatus();
 }
@@ -156,8 +156,6 @@ REGISTER_CALCULATOR(DetectionToTextCalculator);
 ::mediapipe::Status DetectionToTextCalculator::Open(::mediapipe::CalculatorContext *cc) {
     cc->SetOffset(::mediapipe::TimestampDiff(0));
 
-
-    __android_log_print(ANDROID_LOG_ERROR, "TRACKERS", "%s", "aaa");
 //        std::istringstream stream(label_map_string);
 //        std::string line;
     /*int i = 0;
@@ -168,6 +166,32 @@ REGISTER_CALCULATOR(DetectionToTextCalculator);
     return ::mediapipe::OkStatus();
 }
 
+mediapipe::Status DetectionToTextCalculator::Process(
+    mediapipe::CalculatorContext* cc) {
+  std::vector<mediapipe::Detection> output_detections;
+  for (const auto& input_detection :
+       cc->Inputs().Index(0).Get<std::vector<mediapipe::Detection>>()) {
+    output_detections.push_back(input_detection);
+    mediapipe::Detection& output_detection = output_detections.back();
+    bool has_text_label = false;
+    for (const int32 label_id : output_detection.label_id()) {
+      if (label_map_.find(label_id) != label_map_.end()) {
+        output_detection.add_label(label_map_[label_id]);
+        has_text_label = true;
+      }
+    }
+    // Remove label_id field if text labels exist.
+    if (has_text_label) {
+      output_detection.clear_label_id();
+    }
+  }
+  cc->Outputs().Index(0).AddPacket(
+      mediapipe::MakePacket<std::vector<mediapipe::Detection>>(output_detections)
+          .At(cc->InputTimestamp()));
+  return mediapipe::OkStatus();
+}
+
+/*
 ::mediapipe::Status DetectionToTextCalculator::Process(::mediapipe::CalculatorContext *cc) {
     std::vector<::mediapipe::Detection> output_detections;
     std::vector<int32_t> unknown_labels;
@@ -177,10 +201,10 @@ REGISTER_CALCULATOR(DetectionToTextCalculator);
 //        __android_log_print(ANDROID_LOG_ERROR, "TRACKERS", "%s", string_packet.Get<std::string>().c_str());
 //    }
 
-    auto& frames_packet = cc->Inputs().Get("INPUT_FRAME_GPU", 0);
+//    auto& frames_packet = cc->Inputs().Get("INPUT_FRAME_GPU", 0);
 
-    if (!frames_packet.IsEmpty()) {
-        const mediapipe::ImageFrame& image_frame = frames_packet.Get<mediapipe::ImageFrame>();
+//    if (!frames_packet.IsEmpty()) {
+//        const mediapipe::ImageFrame& image_frame = frames_packet.Get<mediapipe::ImageFrame>();
         // std::unique_ptr<uint8> buffer = std::unique_ptr<uint8>(new uint8[image_frame.PixelDataSize()]);
         // image_frame.CopyToBuffer(buffer.get(), image_frame.PixelDataSize());
 
@@ -196,55 +220,55 @@ REGISTER_CALCULATOR(DetectionToTextCalculator);
 //                image_frame.PixelDataSizeStoredContiguously(),
 //                image_frame.WidthStep());
 
-        const uint8* pixel_data = image_frame.PixelData();
-        auto detections = cc->Inputs().Get("", 0).Get<std::vector<::mediapipe::Detection>>();
-        std::vector<ImageData> cropped_images;
-        cropped_images.reserve(detections.size());
-
-        for (const auto& input_detection : detections) {
-            const auto& b_box = input_detection.location_data().relative_bounding_box();
-
-            int height = b_box.height() * image_frame.Height();
-            int width = b_box.width() * image_frame.Width();
-            int xmin = b_box.xmin() * image_frame.Width();
-            int ymin = b_box.ymin() * image_frame.Height();
-
-            __android_log_print(ANDROID_LOG_ERROR, "TRACKERS", "bbox2 WxH %dx%d, xmin ymin %dx%d",
-                            width, height, xmin, ymin);
-
-            if (xmin < 0) {
-                width += xmin;
-                xmin = 0;
-            }
-            if (ymin < 0) {
-                height += ymin;
-                ymin = 0;
-            }
-            if (width > image_frame.Width()) {
-                width = image_frame.Width();
-            }
-            if (height > image_frame.Height()) {
-                height = image_frame.Height();
-            }
-
-            cropped_images.emplace_back();
-            auto& cropped_image = cropped_images.back();
-            cropped_image.pixels.reserve(height * width * image_frame.NumberOfChannels());
-            cropped_image.width = width;
-            cropped_image.height = height;
-
-            for (int y = ymin; y < ymin + height; ++y) {
-                int row_offset = y * image_frame.WidthStep();
-                for (int x = xmin; x < xmin + width; ++x) {
-                    for (int ch = 0; ch < image_frame.NumberOfChannels(); ++ch) {
-                        cropped_image.pixels.push_back(pixel_data[row_offset + x * image_frame.NumberOfChannels() + ch]);
-                    }
-                }
-            }
-
-
-            __android_log_print(ANDROID_LOG_ERROR, "TRACKERS", "ci.size() == %d", cropped_image.pixels.size());
-        }
+//        const uint8* pixel_data = image_frame.PixelData();
+//        auto detections = cc->Inputs().Get("", 0).Get<std::vector<::mediapipe::Detection>>();
+//        std::vector<ImageData> cropped_images;
+//        cropped_images.reserve(detections.size());
+//
+//        for (const auto& input_detection : detections) {
+//            const auto& b_box = input_detection.location_data().relative_bounding_box();
+//
+//            int height = b_box.height() * image_frame.Height();
+//            int width = b_box.width() * image_frame.Width();
+//            int xmin = b_box.xmin() * image_frame.Width();
+//            int ymin = b_box.ymin() * image_frame.Height();
+//
+//            __android_log_print(ANDROID_LOG_ERROR, "TRACKERS", "bbox2 WxH %dx%d, xmin ymin %dx%d",
+//                            width, height, xmin, ymin);
+//
+//            if (xmin < 0) {
+//                width += xmin;
+//                xmin = 0;
+//            }
+//            if (ymin < 0) {
+//                height += ymin;
+//                ymin = 0;
+//            }
+//            if (width > image_frame.Width()) {
+//                width = image_frame.Width();
+//            }
+//            if (height > image_frame.Height()) {
+//                height = image_frame.Height();
+//            }
+//
+//            cropped_images.emplace_back();
+//            auto& cropped_image = cropped_images.back();
+//            cropped_image.pixels.reserve(height * width * image_frame.NumberOfChannels());
+//            cropped_image.width = width;
+//            cropped_image.height = height;
+//
+//            for (int y = ymin; y < ymin + height; ++y) {
+//                int row_offset = y * image_frame.WidthStep();
+//                for (int x = xmin; x < xmin + width; ++x) {
+//                    for (int ch = 0; ch < image_frame.NumberOfChannels(); ++ch) {
+//                        cropped_image.pixels.push_back(pixel_data[row_offset + x * image_frame.NumberOfChannels() + ch]);
+//                    }
+//                }
+//            }
+//
+//
+//            __android_log_print(ANDROID_LOG_ERROR, "TRACKERS", "ci.size() == %d", cropped_image.pixels.size());
+//        }
 
 //        cropped_images.emplace_back();
 //        auto& cropped_image = cropped_images.back();
@@ -265,12 +289,16 @@ REGISTER_CALCULATOR(DetectionToTextCalculator);
 //            cropped_image.pixels.push_back(image_frame.PixelData()[i]);
 //        }
 
-        if (!cropped_images.empty()) {
-            SendImagesToServer(cropped_images);
-        }
-    }
+//        if (!cropped_images.empty()) {
+//            SendImagesToServer(cropped_images);
+//        }
+//    }
 
-    for (const auto& input_detection : cc->Inputs().Get("", 0).Get<std::vector<::mediapipe::Detection>>()) {
+
+    const std::vector<mediapipe::Detection>& input_detections =
+        cc->Inputs().Get("", 0).Get<std::vector<::mediapipe::Detection>>();
+    __android_log_print(ANDROID_LOG_ERROR, "TRACKERS", "%lu", input_detections.size());
+    for (const auto& input_detection : ) {
         output_detections.push_back(input_detection);
         ::mediapipe::Detection& output_detection = output_detections.back();
 
@@ -301,6 +329,7 @@ REGISTER_CALCULATOR(DetectionToTextCalculator);
 
     return ::mediapipe::OkStatus();
 }
+*/
 
 void DetectionToTextCalculator::SendImagesToServer(const std::vector<ImageData>& images) {
     Poco::JSON::Array json_array;

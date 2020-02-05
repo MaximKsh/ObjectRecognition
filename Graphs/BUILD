@@ -10,6 +10,7 @@ cc_library(
 cc_library(
     name = "object_recognition_mobile_calculators",
     deps = [
+        "//Calculators:detection_filter_calculator",
         "//Calculators:detection_to_text_calculator",
         "//Calculators:echo_calculator",
         "//Calculators:label_provider_calculator",
