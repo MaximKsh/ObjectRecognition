@@ -90,3 +90,19 @@ cc_library(
     ],
     alwayslink = 1,
 )
+
+cc_library(
+    name = "boundary_box_crop_calculator",
+    srcs = ["BoundaryBoxCropCalculator.cpp"],
+    visibility = [
+        "//visibility:public",
+    ],
+    deps = [
+        "//ThirdParty:poco",
+        "//Utils:base64",
+        "@mediapipe_repository//mediapipe/framework:calculator_framework",
+        "@mediapipe_repository//mediapipe/framework/formats:detection_cc_proto",
+        "@mediapipe_repository//mediapipe/framework/port:status",
+    ],
+    alwayslink = 1,
+)

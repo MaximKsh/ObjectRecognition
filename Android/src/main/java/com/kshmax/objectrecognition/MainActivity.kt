@@ -3,11 +3,7 @@ package com.kshmax.objectrecognition
 import android.graphics.SurfaceTexture
 import android.os.Bundle
 import android.util.Size
-import android.view.SurfaceHolder
-import android.view.SurfaceView
-import android.view.View
-import android.view.ViewGroup
-import android.widget.TextView
+import android.view.*
 import androidx.appcompat.app.AppCompatActivity
 import com.google.mediapipe.components.CameraHelper.CameraFacing
 import com.google.mediapipe.components.CameraHelper.OnCameraStartedListener
@@ -132,7 +128,7 @@ class MainActivity : AppCompatActivity() {
     private var eglManager: EglManager? = null
     // Sends camera-preview frames into a MediaPipe graph for processing, and displays the processed
     // frames onto a {@link Surface}.
-    private var processor: MyFrameProcessor? = null
+    private var processor: ObjectDetectionFrameProcessor? = null
 
     // Converts the GL_TEXTURE_EXTERNAL_OES texture from Android camera into a regular texture to be
     // consumed by {@link FrameProcessor} and the underlying MediaPipe graph.
@@ -161,7 +157,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         eglManager = EglManager(null)
-        processor = MyFrameProcessor(
+        processor = ObjectDetectionFrameProcessor(
                 this,
                 eglManager!!.nativeContext,
                 graph,
@@ -169,26 +165,13 @@ class MainActivity : AppCompatActivity() {
                 OUTPUT_VIDEO_STREAM_NAME)
         processor!!.videoSurfaceOutput.setFlipY(FLIP_FRAMES_VERTICALLY)
 
-        /*val labels = LABELS.split("\n")
-        processor!!.addPacketCallback("labels") {
-            val arr = PacketGetter.getInt32Vector(it)
-            var answers = ArrayList<String>()
-            for (label in arr) {
-                val answer = if (label in 0..labels.size) {
-                    "$label ${labels[label]}"
-                } else {
-                    "$label ???"
-                }
-                answers.add(answer)
-            }
+
+        processor!!.addPacketCallback("cropped_car") {
+            val croppedImageJson = PacketGetter.getString(it)
 
 
-            val creator = PacketCreator(processor!!.graph)
-            val labels_packet = creator.createString(answers.joinToString("\n"))
-
-            processor!!.graph.addPacketToInputStream("labels_with_values", labels_packet, it.timestamp + 1)
-
-        }*/
+            val a = 4;
+        }
 
         PermissionHelper.checkAndRequestCameraPermissions(this)
 
@@ -218,12 +201,23 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupPreviewDisplayView() {
-        previewDisplayView!!.visibility = View.GONE
+        val displayView = previewDisplayView!!
+        displayView.setOnTouchListener { view, event ->
+            if (event.action == MotionEvent.ACTION_DOWN) {
+                val relativeX = event.x / view.width
+                val relativeY = event.y / view.height
+                this@MainActivity.processor!!.addClick(relativeX, relativeY)
+            }
+
+            true
+        }
+
+        displayView.visibility = View.GONE
         val viewGroup = findViewById<ViewGroup>(R.id.preview_display_layout)
-        viewGroup.addView(previewDisplayView)
-        previewDisplayView
-                ?.holder
-                ?.addCallback(
+        viewGroup.addView(displayView)
+        displayView
+                .holder
+                .addCallback(
                         object : SurfaceHolder.Callback {
                             override fun surfaceCreated(holder: SurfaceHolder) {
                                 processor!!.videoSurfaceOutput.setSurface(holder.surface)

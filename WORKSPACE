@@ -410,3 +410,13 @@ android_configure(name = "local_config_android")
 load("@local_config_android//:android.bzl", "android_workspace")
 
 android_workspace()
+
+http_archive(
+    name = "com_google_protobuf_java",
+    strip_prefix = "protobuf-master",
+    urls = ["https://github.com/protocolbuffers/protobuf/archive/master.zip"],
+)
+
+load("@com_google_protobuf_java//:protobuf_deps.bzl", "protobuf_deps")
+
+protobuf_deps()

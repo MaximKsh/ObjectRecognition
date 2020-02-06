@@ -21,13 +21,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * A {@link com.google.mediapipe.components.TextureFrameProcessor} that sends video frames through a
  * MediaPipe graph.
  */
-public class MyFrameProcessor implements TextureFrameProcessor {
+public class ObjectDetectionFrameProcessor implements TextureFrameProcessor {
   private static final String TAG = "FrameProcessor";
 
   private List<TextureFrameConsumer> consumers = new ArrayList<>();
@@ -41,6 +42,8 @@ public class MyFrameProcessor implements TextureFrameProcessor {
   private final AtomicBoolean started = new AtomicBoolean(false);
   private boolean hybridPath = false;
 
+  private ConcurrentLinkedQueue<String> click_queue = new ConcurrentLinkedQueue<>();
+
   /**
    * Constructor.
    *
@@ -51,7 +54,7 @@ public class MyFrameProcessor implements TextureFrameProcessor {
    * @param inputStream the graph input stream that will receive input video frames.
    * @param outputStream the output stream from which output frames will be produced.
    */
-  public MyFrameProcessor(
+  public ObjectDetectionFrameProcessor(
           Context context,
           long parentNativeContext,
           Graph graph,
@@ -94,6 +97,7 @@ public class MyFrameProcessor implements TextureFrameProcessor {
 
     videoSurfaceOutput = mediapipeGraph.addSurfaceOutput(videoOutputStream);
   }
+
 
   /**
    * Interface to be used so that this class can receive a callback when onNewFrame has determined
@@ -229,14 +233,19 @@ public class MyFrameProcessor implements TextureFrameProcessor {
       addFrameListener.onWillAddFrame(frame.getTimestamp());
     }
 
+    String click = click_queue.poll();
+    if (click == null) {
+      click = "{}";
+    }
+
     Packet imagePacket = packetCreator.createGpuBuffer(frame);
-    Packet stringPacket = packetCreator.createString("TestString");
+    Packet stringPacket = packetCreator.createString(click);
 
     try {
       // addConsumablePacketToInputStream allows the graph to take exclusive ownership of the
       // packet, which may allow for more memory optimizations.
       mediapipeGraph.addConsumablePacketToInputStream(videoInputStream, imagePacket, frame.getTimestamp());
-      mediapipeGraph.addConsumablePacketToInputStream("second_input", stringPacket, frame.getTimestamp());
+      mediapipeGraph.addConsumablePacketToInputStream("click", stringPacket, frame.getTimestamp());
 
     } catch (MediaPipeException e) {
       Log.e(TAG, "Mediapipe error: ", e);
@@ -279,6 +288,11 @@ public class MyFrameProcessor implements TextureFrameProcessor {
     } catch (MediaPipeException e) {
       Log.e(TAG, "Mediapipe error: ", e);
     }
+  }
+
+  public void addClick(float x, float y) {
+    String json = "{\"x\": " + x + ",\"y\":" + y + "}";
+    click_queue.add(json);
   }
 
   /**
