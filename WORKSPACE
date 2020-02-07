@@ -19,13 +19,16 @@ load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 
 # BEGIN io_bazel_rules_kotlin
 
-RULES_KOTLIN_VERSION = "9051eb053f9c958440603d557316a6e9fda14687"
+rules_kotlin_version = "legacy-1.3.0-rc4"
+
+rules_kotlin_sha = "fe32ced5273bcc2f9e41cea65a28a9184a77f3bc30fea8a5c47b3d3bfc801dff"
 
 http_archive(
     name = "io_bazel_rules_kotlin",
-    sha256 = "c36e71eec84c0e17dd098143a9d93d5720e81b4db32bceaf2daf939252352727",
-    strip_prefix = "rules_kotlin-%s" % RULES_KOTLIN_VERSION,
-    url = "https://github.com/bazelbuild/rules_kotlin/archive/%s.tar.gz" % RULES_KOTLIN_VERSION,
+    sha256 = rules_kotlin_sha,
+    strip_prefix = "rules_kotlin-%s" % rules_kotlin_version,
+    type = "zip",
+    url = "https://github.com/bazelbuild/rules_kotlin/archive/%s.zip" % rules_kotlin_version,
 )
 
 load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kotlin_repositories", "kt_register_toolchains")
@@ -56,7 +59,6 @@ maven_install(
         "androidx.appcompat:appcompat:1.0.2",
         "androidx.core:core-ktx:1.0.1",
         "androidx.annotation:annotation:aar:1.1.0",
-        #"androidx.appcompat:appcompat:aar:1.1.0-rc01",
         "androidx.camera:camera-core:aar:1.0.0-alpha06",
         "androidx.camera:camera-camera2:aar:1.0.0-alpha06",
         "androidx.constraintlayout:constraintlayout:aar:1.1.3",
@@ -64,6 +66,8 @@ maven_install(
         "androidx.legacy:legacy-support-v4:aar:1.0.0",
         "androidx.recyclerview:recyclerview:aar:1.1.0-beta02",
         "com.google.android.material:material:aar:1.0.0-rc01",
+        "com.squareup.okhttp3:okhttp:4.3.1",
+        "com.google.code.gson:gson:2.8.6",
     ],
     repositories = [
         "https://maven.google.com",

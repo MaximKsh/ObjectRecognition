@@ -1,17 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
              xmlns:tools="http://schemas.android.com/tools"
              android:id="@+id/container"
              android:layout_width="match_parent"
              android:layout_height="match_parent"
              tools:context=".MainActivity"
-             tools:ignore="MergeRootFrame,UnusedIds" >
+             tools:ignore="MergeRootFrame,UnusedIds"
+            android:orientation="vertical">
 
+    <TextView
+        android:id="@+id/label_text_view"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:gravity="center"
+        android:text="Label"
+        android:textSize="26dp"/>
     <FrameLayout
         android:id="@+id/preview_display_layout"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:layout_weight="1">
+
         <TextView
             android:id="@+id/no_camera_access_view"
             android:layout_height="fill_parent"
@@ -19,4 +28,4 @@
             android:gravity="center"
             android:text="no_camera_access" />
     </FrameLayout>
-</FrameLayout>
+</LinearLayout>

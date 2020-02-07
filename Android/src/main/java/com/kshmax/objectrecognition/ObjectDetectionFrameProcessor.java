@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
+import com.google.gson.Gson;
 
 /**
  * A {@link com.google.mediapipe.components.TextureFrameProcessor} that sends video frames through a
@@ -43,6 +44,7 @@ public class ObjectDetectionFrameProcessor implements TextureFrameProcessor {
   private boolean hybridPath = false;
 
   private ConcurrentLinkedQueue<String> click_queue = new ConcurrentLinkedQueue<>();
+  private Gson gson = new Gson();
 
   /**
    * Constructor.
@@ -291,7 +293,8 @@ public class ObjectDetectionFrameProcessor implements TextureFrameProcessor {
   }
 
   public void addClick(float x, float y) {
-    String json = "{\"x\": " + x + ",\"y\":" + y + "}";
+    ClickLocation click_location = new ClickLocation(x, y);
+    String json = gson.toJson(click_location);
     click_queue.add(json);
   }
 

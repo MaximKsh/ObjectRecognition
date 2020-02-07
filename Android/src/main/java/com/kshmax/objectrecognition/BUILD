@@ -27,11 +27,12 @@ genrule(
     cmd = "cp $< $@",
 )
 
-
-
 kt_android_library(
     name = "lib",
-    srcs = glob(["*.kt", "*.java"]),
+    srcs = glob([
+        "*.kt",
+        "*.java",
+    ]),
     assets = [
         ":binary_graph",
         "@mediapipe_repository//mediapipe/models:ssdlite_object_detection.tflite",
@@ -58,6 +59,8 @@ kt_android_library(
         "@maven//:androidx_fragment_fragment",
         "@maven//:androidx_lifecycle_lifecycle_common",
         "@maven//:androidx_lifecycle_lifecycle_viewmodel",
+        "@maven//:com_google_code_gson_gson",
+        "@maven//:com_squareup_okhttp3_okhttp",
         "@mediapipe_repository//mediapipe/java/com/google/mediapipe/components:android_camerax_helper",
         "@mediapipe_repository//mediapipe/java/com/google/mediapipe/components:android_components",
         "@mediapipe_repository//mediapipe/java/com/google/mediapipe/framework:android_framework",
@@ -68,6 +71,10 @@ kt_android_library(
 
 android_binary(
     name = "objectrecognition",
+    dexopts = [
+        "--force-jumbo",
+    ],
     manifest = "AndroidManifest.xml",
+    multidex = "native",
     deps = [":lib"],
 )

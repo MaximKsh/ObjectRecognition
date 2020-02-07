@@ -1,24 +1,54 @@
 package com.kshmax.objectrecognition
 
 import android.graphics.SurfaceTexture
+import android.os.AsyncTask
 import android.os.Bundle
 import android.util.Size
 import android.view.*
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import com.google.gson.Gson
 import com.google.mediapipe.components.CameraHelper.CameraFacing
-import com.google.mediapipe.components.CameraHelper.OnCameraStartedListener
 import com.google.mediapipe.components.CameraXPreviewHelper
 import com.google.mediapipe.components.ExternalTextureConverter
-import com.google.mediapipe.components.FrameProcessor
 import com.google.mediapipe.components.PermissionHelper
 import com.google.mediapipe.framework.AndroidAssetUtil
 import com.google.mediapipe.framework.Graph
-import com.google.mediapipe.framework.PacketCreator
 import com.google.mediapipe.framework.PacketGetter
 import com.google.mediapipe.glutil.EglManager
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 
 
 class MainActivity : AppCompatActivity() {
+    inner class RecognitionRequestTask() : AsyncTask<String, Void, RecognitionResult>() {
+        private val BACKEND_URL = "http://192.168.1.122:8080/"
+        private val JSON = "application/json; charset=utf-8".toMediaType()
+
+        override fun doInBackground(vararg croppedCarJson: String): RecognitionResult {
+            val gson = Gson()
+            val client = OkHttpClient()
+            val body = croppedCarJson[0].toRequestBody(JSON)
+            val request = Request.Builder()
+                    .url(BACKEND_URL + "recognize")
+                    .post(body)
+                    .build()
+
+            val resultJson = client.newCall(request).execute().use {
+                response -> response.body!!.string()
+            }
+
+            return gson.fromJson(resultJson, RecognitionResult::class.java)
+
+        }
+
+        override fun onPostExecute(result: RecognitionResult) {
+            val tv = this@MainActivity.findViewById<TextView>(R.id.label_text_view)
+            tv.text = result.label
+        }
+    }
 
     private val BINARY_GRAPH_NAME = "mobile_binary_graph.binarypb"
     private val INPUT_VIDEO_STREAM_NAME = "input_video"
@@ -26,98 +56,6 @@ class MainActivity : AppCompatActivity() {
     private val CAMERA_FACING = CameraFacing.BACK
 
     private val FLIP_FRAMES_VERTICALLY = true
-    private val LABELS = """
-        person
-        bicycle
-        car
-        motorcycle
-        airplane
-        bus
-        train
-        truck
-        boat
-        traffic light
-        fire hydrant
-        ???
-        stop sign
-        parking meter
-        bench
-        bird
-        cat
-        dog
-        horse
-        sheep
-        cow
-        elephant
-        bear
-        zebra
-        giraffe
-        ???
-        backpack
-        umbrella
-        ???
-        ???
-        handbag
-        tie
-        suitcase
-        frisbee
-        skis
-        snowboard
-        sports ball
-        kite
-        baseball bat
-        baseball glove
-        skateboard
-        surfboard
-        tennis racket
-        bottle
-        ???
-        wine glass
-        cup
-        fork
-        knife
-        spoon
-        bowl
-        banana
-        apple
-        sandwich
-        orange
-        broccoli
-        carrot
-        hot dog
-        pizza
-        donut
-        cake
-        chair
-        couch
-        potted plant
-        bed
-        ???
-        dining table
-        ???
-        ???
-        toilet
-        ???
-        tv
-        laptop
-        mouse
-        remote
-        keyboard
-        cell phone
-        microwave
-        oven
-        toaster
-        sink
-        refrigerator
-        ???
-        book
-        clock
-        vase
-        scissors
-        teddy bear
-        hair drier
-        toothbrush
-    """.trimIndent()
 
     // {@link SurfaceTexture} where the camera-preview frames can be accessed.
     private var previewFrameTexture: SurfaceTexture? = null
@@ -157,24 +95,27 @@ class MainActivity : AppCompatActivity() {
         }
 
         eglManager = EglManager(null)
-        processor = ObjectDetectionFrameProcessor(
+        val objectDetectionFrameProcessor = ObjectDetectionFrameProcessor(
                 this,
                 eglManager!!.nativeContext,
                 graph,
                 INPUT_VIDEO_STREAM_NAME,
                 OUTPUT_VIDEO_STREAM_NAME)
-        processor!!.videoSurfaceOutput.setFlipY(FLIP_FRAMES_VERTICALLY)
+        objectDetectionFrameProcessor.videoSurfaceOutput.setFlipY(FLIP_FRAMES_VERTICALLY)
 
-
-        processor!!.addPacketCallback("cropped_car") {
-            val croppedImageJson = PacketGetter.getString(it)
-
-
-            val a = 4;
+        val tv = this@MainActivity.findViewById<TextView>(R.id.label_text_view)
+        tv.setOnClickListener {
+            (it as TextView).text = ""
         }
 
-        PermissionHelper.checkAndRequestCameraPermissions(this)
+        objectDetectionFrameProcessor.addPacketCallback("cropped_car") {
+            // This is CroppedImage into JSON. It can be deserialized but it is redundant
+            val croppedImageJson = PacketGetter.getString(it)
+            RecognitionRequestTask().execute(croppedImageJson)
+        }
 
+        processor = objectDetectionFrameProcessor
+        PermissionHelper.checkAndRequestCameraPermissions(this)
     }
 
     override fun onResume() {
@@ -196,7 +137,7 @@ class MainActivity : AppCompatActivity() {
             requestCode: Int,
             permissions: Array<String?>,
             grantResults: IntArray) {
-        super.onRequestPermissionsResult(requestCode, permissions!!, grantResults!!)
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         PermissionHelper.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
 
@@ -245,14 +186,13 @@ class MainActivity : AppCompatActivity() {
 
     private fun startCamera() {
         cameraHelper = CameraXPreviewHelper()
-        cameraHelper!!.setOnCameraStartedListener(
-                OnCameraStartedListener { surfaceTexture: SurfaceTexture? ->
-                    previewFrameTexture = surfaceTexture
-                    // Make the display view visible to start showing the preview. This triggers the
-                    // SurfaceHolder.Callback added to (the holder of) previewDisplayView.
-                    previewDisplayView!!.visibility = View.VISIBLE
-                })
-        cameraHelper!!.startCamera(this, CAMERA_FACING,  /*surfaceTexture=*/null)
+        cameraHelper!!.setOnCameraStartedListener { surfaceTexture: SurfaceTexture? ->
+            previewFrameTexture = surfaceTexture
+            // Make the display view visible to start showing the preview. This triggers the
+            // SurfaceHolder.Callback added to (the holder of) previewDisplayView.
+            previewDisplayView!!.visibility = View.VISIBLE
+        }
+        cameraHelper!!.startCamera(this, CAMERA_FACING, null)
     }
 
     companion object {
