@@ -1,10 +1,14 @@
 package com.kshmax.objectrecognition
 
+import android.app.AlertDialog
+import android.content.Context
 import android.graphics.SurfaceTexture
 import android.os.AsyncTask
 import android.os.Bundle
 import android.util.Size
 import android.view.*
+import android.widget.EditText
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.google.gson.Gson
@@ -20,19 +24,56 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import java.lang.Exception
 
 
 class MainActivity : AppCompatActivity() {
-    inner class RecognitionRequestTask() : AsyncTask<String, Void, RecognitionResult>() {
-        private val BACKEND_URL = "http://192.168.1.122:8080/"
+    class TestConnectionRequestTask(
+        private val url: String,
+        private val context: Context) : AsyncTask<Void, Void, String>() {
+
+        override fun doInBackground(vararg params: Void): String {
+            val client = OkHttpClient()
+            val url = "${url}/test"
+            val request = Request.Builder()
+                    .url(url)
+                    .get()
+                    .build()
+
+            return try {
+                client.newCall(request).execute().use {
+                    response -> response.body!!.string()
+                }
+            } catch (e: Exception) {
+                e.message ?: "Backend service is not available"
+            }
+        }
+
+        override fun onPostExecute(result: String) {
+            val alertDialog = AlertDialog.Builder(context)
+            alertDialog.setTitle("Test connection")
+            alertDialog.setMessage(result)
+
+            alertDialog.setPositiveButton("Got it") { dialog, _ ->
+                dialog.cancel()
+            }
+            alertDialog.show()
+        }
+
+    }
+
+    class RecognitionRequestTask(
+            private val url: String,
+            private val tv: TextView) : AsyncTask<String, Void, RecognitionResult>() {
         private val JSON = "application/json; charset=utf-8".toMediaType()
 
         override fun doInBackground(vararg croppedCarJson: String): RecognitionResult {
             val gson = Gson()
             val client = OkHttpClient()
             val body = croppedCarJson[0].toRequestBody(JSON)
+            val url = "${url}/recognize"
             val request = Request.Builder()
-                    .url(BACKEND_URL + "recognize")
+                    .url(url)
                     .post(body)
                     .build()
 
@@ -45,11 +86,12 @@ class MainActivity : AppCompatActivity() {
         }
 
         override fun onPostExecute(result: RecognitionResult) {
-            val tv = this@MainActivity.findViewById<TextView>(R.id.label_text_view)
             tv.text = result.label
         }
     }
 
+    private val URL_KEY = "URL"
+    private val DEFAULT_URL = "http://192.168.1.122:8080"
     private val BINARY_GRAPH_NAME = "mobile_binary_graph.binarypb"
     private val INPUT_VIDEO_STREAM_NAME = "input_video"
     private val OUTPUT_VIDEO_STREAM_NAME = "output_video"
@@ -111,7 +153,7 @@ class MainActivity : AppCompatActivity() {
         objectDetectionFrameProcessor.addPacketCallback("cropped_car") {
             // This is CroppedImage into JSON. It can be deserialized but it is redundant
             val croppedImageJson = PacketGetter.getString(it)
-            RecognitionRequestTask().execute(croppedImageJson)
+            RecognitionRequestTask(getUrl(), tv).execute(croppedImageJson)
         }
 
         processor = objectDetectionFrameProcessor
@@ -131,6 +173,26 @@ class MainActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
         converter!!.close()
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        val inflater: MenuInflater = menuInflater
+        inflater.inflate(R.menu.main_menu, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.change_url -> {
+                changeUrlDialog()
+                true
+            }
+            R.id.test_connection -> {
+                testConnection()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
     }
 
     override fun onRequestPermissionsResult(
@@ -193,6 +255,46 @@ class MainActivity : AppCompatActivity() {
             previewDisplayView!!.visibility = View.VISIBLE
         }
         cameraHelper!!.startCamera(this, CAMERA_FACING, null)
+    }
+
+    private fun testConnection() {
+        TestConnectionRequestTask(getUrl(), this).execute()
+    }
+
+    private fun changeUrlDialog() {
+        val alertDialog = AlertDialog.Builder(this@MainActivity)
+        alertDialog.setTitle("Set URL")
+        alertDialog.setMessage("Specify backend URL in format \"http://domain:port\" (without trailing slash)")
+
+        val input = EditText(this@MainActivity)
+        val lp = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.MATCH_PARENT)
+        input.layoutParams = lp
+        alertDialog.setView(input)
+        input.setText(getUrl())
+
+        alertDialog.setPositiveButton("Confirm") { dialog, _ ->
+            setUrl(input.text.toString())
+            dialog.cancel()
+        }
+
+        alertDialog.setNegativeButton("Cancel") { dialog, _ -> dialog.cancel() }
+
+        alertDialog.show()
+    }
+
+    private fun getUrl() : String {
+        val sharedPref = this.getPreferences(Context.MODE_PRIVATE) ?: return DEFAULT_URL
+        return sharedPref.getString(URL_KEY, DEFAULT_URL) ?: DEFAULT_URL
+    }
+
+    private fun setUrl(url: String) {
+        val sharedPref = this.getPreferences(Context.MODE_PRIVATE) ?: return
+        with (sharedPref.edit()) {
+            putString(URL_KEY, url)
+            commit()
+        }
     }
 
     companion object {

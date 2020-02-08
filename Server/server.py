@@ -4,7 +4,7 @@ import base64
 import datetime
 
 async def test(request):
-    return web.Response(text='Test', status=200)
+    return web.Response(text='Backend service is available', status=200)
 
 async def handle(request):
     image = await request.json()
