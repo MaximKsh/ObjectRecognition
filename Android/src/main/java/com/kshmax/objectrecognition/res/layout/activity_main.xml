@@ -10,10 +10,10 @@
 
     <TextView
         android:id="@+id/label_text_view"
-        android:layout_height="wrap_content"
+        android:layout_height="60dp"
         android:layout_width="match_parent"
         android:gravity="center"
-        android:text="Label"
+        android:text="Car model will be displayed here"
         android:textSize="26dp"/>
     <FrameLayout
         android:id="@+id/preview_display_layout"
