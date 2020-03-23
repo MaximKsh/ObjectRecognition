@@ -21,6 +21,7 @@ cc_library(
         "@mediapipe_repository//mediapipe/calculators/tflite:tflite_converter_calculator",
         "@mediapipe_repository//mediapipe/calculators/tflite:tflite_inference_calculator",
         "@mediapipe_repository//mediapipe/calculators/tflite:tflite_tensors_to_detections_calculator",
+        "@mediapipe_repository//mediapipe/calculators/tflite:tflite_tensors_to_floats_calculator",
         "@mediapipe_repository//mediapipe/calculators/util:annotation_overlay_calculator",
         "@mediapipe_repository//mediapipe/calculators/util:detection_letterbox_removal_calculator",
         "@mediapipe_repository//mediapipe/calculators/util:detections_to_render_data_calculator",

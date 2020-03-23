@@ -74,7 +74,7 @@ private:
             const ClickLocation& click_location,
             const std::vector<mediapipe::Detection>& detections);
 
-    static CroppedImage CropImage(
+    static std::unique_ptr<mediapipe::ImageFrame> CropImage(
             const mediapipe::ImageFrame& image_frame,
             const mediapipe::Detection& detection);
 };
@@ -86,7 +86,7 @@ mediapipe::Status BoundaryBoxCropCalculator::GetContract(mediapipe::CalculatorCo
     cc->Inputs().Get("IMAGE", 0).Set<mediapipe::ImageFrame>();
     cc->Inputs().Get("CLICK", 0).Set<std::string>(); // ClickLocation model
 
-    cc->Outputs().Get("", 0).Set<std::string>(); // CroppedImage model
+    cc->Outputs().Get("", 0).Set<mediapipe::ImageFrame>();
 
     return mediapipe::OkStatus();
 }
@@ -123,13 +123,12 @@ mediapipe::Status BoundaryBoxCropCalculator::Process(mediapipe::CalculatorContex
     absl::optional<mediapipe::Detection> detection = FindOverlappedDetection(click_location, detections);
 
     if (detection.has_value()) {
-        CroppedImage cropped_image = CropImage(image_frame, detection.value());
+        std::unique_ptr<mediapipe::ImageFrame> cropped_image = CropImage(image_frame, detection.value());
 
-        std::string cropped_image_json = cropped_image.ToJson();
+     //   std::string cropped_image_json = cropped_image.ToJson();
     // __android_log_print(ANDROID_LOG_ERROR, "TRACKERS", "CroppedImageJson %s", cropped_image_json.c_str());
 
-        auto out_packet = mediapipe::MakePacket<std::string>(cropped_image_json).At(cc->InputTimestamp());
-        cc->Outputs().Get("", 0).AddPacket(out_packet);
+        cc->Outputs().Get("", 0).Add(cropped_image.release(), cc->InputTimestamp());
     }
 
     return mediapipe::OkStatus();
@@ -150,7 +149,7 @@ absl::optional<mediapipe::Detection> BoundaryBoxCropCalculator::FindOverlappedDe
     return absl::nullopt;
 }
 
-CroppedImage BoundaryBoxCropCalculator::CropImage(
+std::unique_ptr<mediapipe::ImageFrame> BoundaryBoxCropCalculator::CropImage(
         const mediapipe::ImageFrame& image_frame,
         const mediapipe::Detection& detection) {
     const uint8* pixel_data = image_frame.PixelData();
@@ -187,10 +186,14 @@ CroppedImage BoundaryBoxCropCalculator::CropImage(
         }
     }
 
-    CroppedImage cropped_image;
-    cropped_image.width = width;
-    cropped_image.height = height;
-    cropped_image.base64_pixels = Base64::Encode(pixels);
+    std::unique_ptr<mediapipe::ImageFrame> cropped_image = std::make_unique<mediapipe::ImageFrame>();
+    cropped_image->CopyPixelData(image_frame.Format(), width, height, pixels.data(),
+            mediapipe::ImageFrame::kDefaultAlignmentBoundary);
+
+//    CroppedImage cropped_image;
+//    cropped_image.width = width;
+//    cropped_image.height = height;
+//    cropped_image.base64_pixels = Base64::Encode(pixels);
 
     return cropped_image;
 }

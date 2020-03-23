@@ -1,7 +1,7 @@
 input_stream: "input_video"
 input_stream: "click"
 output_stream: "output_video"
-output_stream: "cropped_car"
+output_stream: "car_vector"
 
 # Throttles the images flowing downstream for flow control. It passes through
 # the very first incoming image unaltered, and waits for
@@ -150,21 +150,6 @@ node {
     }
 }
 
-# Parallel branch. 
-node {
-  calculator: "GpuBufferToImageFrameCalculator"
-  input_stream: "throttled_input_video"
-  output_stream: "image_frame_gpu"
-}
-
-node {
-  calculator: "BoundaryBoxCropCalculator"
-  input_stream: "DETECTION:car_detections"
-  input_stream: "IMAGE:image_frame_gpu"
-  input_stream: "CLICK:throttled_click"
-  output_stream: "cropped_car"
-}
-
 # Maps detection label IDs to the corresponding label text. The label map is
 # provided in the label_map_path option.
 #input_stream: "INPUT_FRAME_GPU:image_frame_gpu"
@@ -196,3 +181,68 @@ node {
   input_stream: "render_data"
   output_stream: "OUTPUT_FRAME_GPU:output_video"
 }
+
+# =========================================
+# Parallel branch.
+# =========================================
+
+# Convert to CPU format
+node {
+  calculator: "GpuBufferToImageFrameCalculator"
+  input_stream: "throttled_input_video"
+  output_stream: "image_frame_cpu"
+}
+
+# Crop image
+node {
+  calculator: "BoundaryBoxCropCalculator"
+  input_stream: "DETECTION:car_detections"
+  input_stream: "IMAGE:image_frame_cpu"
+  input_stream: "CLICK:throttled_click"
+  output_stream: "cropped_car"
+}
+
+# Back to GPU format
+#node {
+#  calculator: "ImageFrameToGpuBufferCalculator"
+#  input_stream: "cropped_car"
+#  output_stream: "cropped_car_gpu"
+#}
+
+# Rescale image to 224x224
+node: {
+  calculator: "ImageTransformationCalculator"
+  input_stream: "IMAGE:cropped_car"
+  output_stream: "IMAGE:transformed_cropped_car"
+  node_options: {
+    [type.googleapis.com/mediapipe.ImageTransformationCalculatorOptions] {
+      output_width: 224
+      output_height: 224
+    }
+  }
+}
+
+node {
+  calculator: "TfLiteConverterCalculator"
+  input_stream: "IMAGE:transformed_cropped_car"
+  output_stream: "TENSORS:cropped_car_tensor"
+}
+
+node {
+  calculator: "TfLiteInferenceCalculator"
+  input_stream: "TENSORS:cropped_car_tensor"
+  output_stream: "TENSORS:car_vector_tensors"
+  node_options: {
+    [type.googleapis.com/mediapipe.TfLiteInferenceCalculatorOptions] {
+      model_path: "Models/car_vectorizer.tflite"
+    }
+  }
+}
+
+node {
+  calculator: "TfLiteTensorsToFloatsCalculator"
+  input_stream: "TENSORS:car_vector_tensors"
+  output_stream: "FLOATS:car_vector"
+}
+
+# =========================================

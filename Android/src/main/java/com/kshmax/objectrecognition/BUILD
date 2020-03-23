@@ -35,6 +35,7 @@ kt_android_library(
     ]),
     assets = [
         ":binary_graph",
+        "//Models:car_vectorizer.tflite",
         "@mediapipe_repository//mediapipe/models:ssdlite_object_detection.tflite",
         "@mediapipe_repository//mediapipe/models:ssdlite_object_detection_labelmap.txt",
     ],

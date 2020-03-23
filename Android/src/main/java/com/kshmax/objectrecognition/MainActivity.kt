@@ -150,10 +150,11 @@ class MainActivity : AppCompatActivity() {
             (it as TextView).text = ""
         }
 
-        objectDetectionFrameProcessor.addPacketCallback("cropped_car") {
+        objectDetectionFrameProcessor.addPacketCallback("car_vector") {
             // This is CroppedImage into JSON. It can be deserialized but it is redundant
-            val croppedImageJson = PacketGetter.getString(it)
-            RecognitionRequestTask(getUrl(), tv).execute(croppedImageJson)
+            val car = PacketGetter.getFloat32Vector(it)
+            // RecognitionRequestTask(getUrl(), tv).execute(croppedImageJson)
+            val a = 5;
         }
 
         processor = objectDetectionFrameProcessor

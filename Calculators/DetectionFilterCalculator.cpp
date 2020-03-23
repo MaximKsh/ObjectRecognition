@@ -32,8 +32,6 @@ mediapipe::Status DetectionFilterCalculator::Open(mediapipe::CalculatorContext *
     const auto& options = cc->Options<objectrecognition::DetectionFilterCalculatorOptions>();
     pass_ids_ = std::vector<int>(options.pass_id().begin(), options.pass_id().end());
 
-    __android_log_print(ANDROID_LOG_ERROR, "TRACKERS", "%d", pass_ids_.size());
-
     return ::mediapipe::OkStatus();
 }
 
