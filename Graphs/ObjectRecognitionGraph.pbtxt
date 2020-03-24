@@ -202,13 +202,6 @@ node {
   output_stream: "cropped_car"
 }
 
-# Back to GPU format
-#node {
-#  calculator: "ImageFrameToGpuBufferCalculator"
-#  input_stream: "cropped_car"
-#  output_stream: "cropped_car_gpu"
-#}
-
 # Rescale image to 224x224
 node: {
   calculator: "ImageTransformationCalculator"
@@ -222,12 +215,14 @@ node: {
   }
 }
 
+# Convert to float32 tensor and normalize to [-1;1]
 node {
   calculator: "TfLiteConverterCalculator"
   input_stream: "IMAGE:transformed_cropped_car"
   output_stream: "TENSORS:cropped_car_tensor"
 }
 
+# Infer model on CPU (TODO GPU)
 node {
   calculator: "TfLiteInferenceCalculator"
   input_stream: "TENSORS:cropped_car_tensor"
@@ -239,6 +234,7 @@ node {
   }
 }
 
+# Convert to vector<float> and return from graph.
 node {
   calculator: "TfLiteTensorsToFloatsCalculator"
   input_stream: "TENSORS:car_vector_tensors"

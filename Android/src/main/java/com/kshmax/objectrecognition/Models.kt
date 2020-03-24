@@ -5,10 +5,8 @@ data class ClickLocation(
         val y: Float
 )
 
-data class CroppedImage(
-        val width: Int,
-        val height: Int,
-        val base64_pixels: String
+data class CarDescriptor(
+        val car: FloatArray
 )
 
 data class RecognitionResult(

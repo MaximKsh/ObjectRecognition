@@ -1,5 +1,6 @@
 package com.kshmax.objectrecognition
 
+import android.app.Activity
 import android.app.AlertDialog
 import android.content.Context
 import android.graphics.SurfaceTexture
@@ -62,31 +63,38 @@ class MainActivity : AppCompatActivity() {
 
     }
 
+    data class RecognitionRequestTaskResult(
+            val result: RecognitionResult? = null,
+            val error: String? = null
+    )
+
     class RecognitionRequestTask(
             private val url: String,
-            private val tv: TextView) : AsyncTask<String, Void, RecognitionResult>() {
+            private val tv: TextView) : AsyncTask<CarDescriptor, Void, RecognitionRequestTaskResult>() {
         private val JSON = "application/json; charset=utf-8".toMediaType()
 
-        override fun doInBackground(vararg croppedCarJson: String): RecognitionResult {
+        override fun doInBackground(vararg carDescriptor: CarDescriptor): RecognitionRequestTaskResult {
             val gson = Gson()
             val client = OkHttpClient()
-            val body = croppedCarJson[0].toRequestBody(JSON)
+            val body = gson.toJson(carDescriptor[0]).toRequestBody(JSON)
             val url = "${url}/recognize"
             val request = Request.Builder()
                     .url(url)
                     .post(body)
                     .build()
 
-            val resultJson = client.newCall(request).execute().use {
-                response -> response.body!!.string()
+            return try {
+                val resultJson = client.newCall(request).execute().use { response -> response.body!!.string()
+                }
+
+                RecognitionRequestTaskResult(gson.fromJson(resultJson, RecognitionResult::class.java))
+            } catch (e: Exception) {
+                RecognitionRequestTaskResult(null, e.message ?: "Backend service is not available")
             }
-
-            return gson.fromJson(resultJson, RecognitionResult::class.java)
-
         }
 
-        override fun onPostExecute(result: RecognitionResult) {
-            tv.text = result.label
+        override fun onPostExecute(result: RecognitionRequestTaskResult) {
+            tv.text = result.result?.label ?: result.error ?: "Unknown error"
         }
     }
 
@@ -153,8 +161,8 @@ class MainActivity : AppCompatActivity() {
         objectDetectionFrameProcessor.addPacketCallback("car_vector") {
             // This is CroppedImage into JSON. It can be deserialized but it is redundant
             val car = PacketGetter.getFloat32Vector(it)
-            // RecognitionRequestTask(getUrl(), tv).execute(croppedImageJson)
-            val a = 5;
+            val descriptor = CarDescriptor(car)
+            RecognitionRequestTask(getUrl(), tv).execute(descriptor)
         }
 
         processor = objectDetectionFrameProcessor
