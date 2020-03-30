@@ -24,4 +24,4 @@ vectors = np.load('vectors.npy')
 labels = np.load('labels.npy')
 
 if __name__ == '__main__':
-    web.run_app(app)
+    web.run_app(app, host="127.0.0.1", port="10000")

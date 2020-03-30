@@ -99,7 +99,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private val URL_KEY = "URL"
-    private val DEFAULT_URL = "http://192.168.1.122:8080"
+    private val DEFAULT_URL = "http://92.53.78.235:5000"
     private val BINARY_GRAPH_NAME = "mobile_binary_graph.binarypb"
     private val INPUT_VIDEO_STREAM_NAME = "input_video"
     private val OUTPUT_VIDEO_STREAM_NAME = "output_video"
