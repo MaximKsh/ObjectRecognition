@@ -21,7 +21,7 @@
 
 Как система сборки понимает, какой именно инструмент необходимо использовать для того или иного таргета? Для начала необходимо понять, из чего складывается Bazel-проект. Главным файлом проекта является текстовый файл WORKSPACE, в котором указываются все зависимости проекта. Говоря обо всех зависимостях, подразумеваются транзитивные зависимости тоже. Иными словами, если проект зависит от A, который зависит от B, то необходимо будет указать в WORKSPACE файле как зависимость от A, так и от B. Из-за этого WORKSPACE может сильно разрастаться, что можно будет заметить в дальнейшем примере работы с Mediapipe. Разработчики Bazel объясняют такое решение тем, что при изменении у зависимостей проекта их зависимостей, которые используются в проекте, проект может ломаться и искать проблему становится очень сложно, поэтому требуется явно указать всё, от чего зависит проект. Вот как может выглядить пример файла WORKSPACE:
 
-```
+```python
 # Загрузка правила для получения зависимостей скачиванием
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
@@ -44,7 +44,7 @@ http_archive(
 
 Помимо файла WORKSPACE любой Bazel проект содержит некоторое количество файлов BUILD. BUILD файл описывает директорию, в которой он находится, как модуль и содержит описание таргетов для сборки. Вот так выглядит BUILD файл для сборки C++ проекта с одним файлом:
 
-```
+```python
 cc_binary(
     name="HelloWorld",
     srcs=["main.cpp"],
@@ -68,7 +68,7 @@ Source - модуль, HelloWorld - таргет.
 
 Добавлять всё зависимости и исходники таргета одно правило часто может быть затруднительно, правила могут разрастаться и быть трудноподдерживаемыми, а также много кода может дублироваться. Для решения данной проблемы в Bazel есть библиотеки (libraries). 
 
-```
+```python
 cc_library(
     name = "lib",
     hdrs = ["utils.h"],
@@ -121,23 +121,176 @@ Mediapipe - кроссплатформенный фреймворк для за�
 
 Для начала можно рассмотреть самый простой граф, состоящий из одного узла, который повторяет N раз пакет, полученный на вход.
 
-Входной пакет -> RepeatNTimesNode -> Выходной пакет.
+![Hello World](hello_world_graph.png "Hello World")
 
-Вот как выглядит pbtxt этого файла
-...
+Для такого графа конфигурация выглядит следующим образом:
 
-Вот как выглядит код калькулятора
-...
+```
+input_stream: "in"
+output_stream: "out"
 
-Вот протобаф с настройками калькулятора
-...
+node {
+    calculator: "RepeatNTimesCalculator"
+    input_stream: "in"
+    output_stream: "OUTPUT_TAG:out"
+    node_options: {
+        [type.googleapis.com/mediapipe_demonstration.RepeatNTimesCalculatoOptions] {
+            n: 3
+        }
+    }
+}
+```
 
-main.cpp для запуска графа
-...
+Калькулятор RepeatNTimesCalculator необходимо написать самостоятельно.
 
-Собираем, запускаем смотрим: 
+```C++
+class RepeatNTimesCalculator : public mediapipe::CalculatorBase {
+public:
+    static mediapipe::Status GetContract(mediapipe::CalculatorContract* cc) {
+        // На вход ожидается поток без тега с пакетами, содержащими строки
+        cc->Inputs().Get("", 0).Set<std::string>();
+        // Из калькулятора выходит поток с тегом OUTPUT_TAG, в котором пакеты со строками
+        cc->Outputs().Get("OUTPUT_TAG", 0).Set<std::string>();
+        return mediapipe::OkStatus();
+    }
+
+    mediapipe::Status Open(mediapipe::CalculatorContext* cc) final {
+        // Загрузка параметров калькулятора, указанных при описании графа
+        const auto& options = cc->Options<mediapipe_demonstration::RepeatNTimesCalculatoOptions>();
+        // n - количество повторений входного сигнала на выходе
+        n_ = options.n();
+        return mediapipe::OkStatus();
+    }
+
+    mediapipe::Status Process(mediapipe::CalculatorContext* cc) final {
+        // Получение текста из входного пакета
+        // Из массива входных потоков берется поток без тега с нулевым индексом
+        // И из него достается содержимое типа std::string
+        auto txt = cc->Inputs().Index(0).Value().Get<std::string>();
+
+        for (int i = 0; i < n_; ++i) {
+            // Создание пакета с содержимым из входного
+            auto packet = mediapipe::MakePacket<std::string>(txt).At(cc->InputTimestamp() + i);
+            // Отправка пакета по потоку с тегом OUTPUT_TAG и индексом 0
+            cc->Outputs().Get("OUTPUT_TAG", 0).AddPacket(packet);
+        }
+        
+        return mediapipe::OkStatus();
+    }
+private:
+    int n_;
+};
+// Макрос для регистрации калькулятора
+REGISTER_CALCULATOR(RepeatNTimesCalculator);
+```
+
+Помимо самого кода калькулятора необходимо определить proto-файл с конфигурацией калькулятора. В данном примере это RepeatNTimesCalculatoOptions, который используется для указания того, сколько раз необходимо повторить входной сигнал на выходе.
+
+```
+syntax = "proto2";
+package mediapipe_demonstration;
+import "mediapipe/framework/calculator_options.proto";
+message RepeatNTimesCalculatoOptions {
+  extend mediapipe.CalculatorOptions {
+    optional RepeatNTimesCalculatoOptions ext = 350607623;
+  }
+  required int32 n = 2;
+}
+```
+
+Теперь необходимо запустить полученный граф
+
+```C++
+mediapipe::Status RunGraph() {
+    // Загрузка графа из файла
+    std::ifstream file("./hello-world/graph.pbtxt");
+    std::string graph_file_content;
+    graph_file_content.assign(
+        std::istreambuf_iterator<char>(file), 
+        std::istreambuf_iterator<char>());
+    mediapipe::CalculatorGraphConfig config = 
+        mediapipe::ParseTextProtoOrDie<mediapipe::CalculatorGraphConfig>(graph_file_content);
+    // Инициализация графа
+    mediapipe::CalculatorGraph graph;
+    MP_RETURN_IF_ERROR(graph.Initialize(config));
+    // Подписка на выходной поток
+    ASSIGN_OR_RETURN(mediapipe::OutputStreamPoller poller, graph.AddOutputStreamPoller("out"));
+    // Запуск графа
+    MP_RETURN_IF_ERROR(graph.StartRun({}));
+    // Отправка пакета на вход и закрытие входного потока
+    auto input_packet = mediapipe::MakePacket<std::string>("Hello!").At(mediapipe::Timestamp(0));
+    MP_RETURN_IF_ERROR(graph.AddPacketToInputStream("in", input_packet));
+    MP_RETURN_IF_ERROR(graph.CloseInputStream("in"));
+    // Получение пакета на выходе
+    mediapipe::Packet packet;
+    while (poller.Next(&packet)) {
+        std::cout << packet.Get<std::string>() << std::endl;
+    }
+    return graph.WaitUntilDone();
+}
+```
+
+Теперь, чтобы собрать всё воедино, необходимо написать BUILD файл с набором правил сборки для файла настроек калькулятора, исходного кода калькулятора и вызывающего кода
+
+```python
+load("@mediapipe_repository//mediapipe/framework/port:build_config.bzl", "mediapipe_cc_proto_library")
+# Правило сборки для настроек калькулятора
+proto_library(
+    name = "repeat_n_times_calculator_proto",
+    srcs = ["RepeatNTimesCalculator.proto"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "@mediapipe_repository//mediapipe/framework:calculator_proto",
+    ],
+)
+# Правило сборки для кода калькулятора
+mediapipe_cc_proto_library(
+    name = "repeat_n_times_calculator_cc_proto",
+    srcs = ["RepeatNTimesCalculator.proto"],
+    cc_deps = [
+        "@mediapipe_repository//mediapipe/framework:calculator_cc_proto",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [":repeat_n_times_calculator_proto"],
+)
+# Правило сборки калькулятора. Указано название, список исходников и зависимости
+cc_library(
+    name = "repeat_n_times_calculator",
+    srcs = ["RepeatNTimesCalculator.cpp"],
+    visibility = [
+        "//visibility:public",
+    ],
+    deps = [
+        ":repeat_n_times_calculator_cc_proto",
+        "@mediapipe_repository//mediapipe/framework:calculator_framework",
+        "@mediapipe_repository//mediapipe/framework/port:status",
+    ],
+    alwayslink = 1,
+)
+# Правило сборки исполняемого файла, который будет запускать граф.
+cc_binary(
+    name = "HelloMediapipe",
+    srcs = ["main.cpp"],
+    deps = [
+        "repeat_n_times_calculator",
+        "@mediapipe_repository//mediapipe/framework/port:logging",
+        "@mediapipe_repository//mediapipe/framework/port:parse_text_proto",
+        "@mediapipe_repository//mediapipe/framework/port:status",
+    ],
+)
+```
+
+Теперь можно собрать и запустить код:
+
+```
+$ bazel-2.0.0 build --define MEDIAPIPE_DISABLE_GPU=1 //hello-world:HelloMediapipe
 ...
-вставить скрин запуска
+INFO: Build completed successfully, 4 total actions
+$ ./bazel-bin/hello-world/HelloMediapipe
+Hello!
+Hello!
+Hello!
+```
 
 Данный пример демонстрирует пример запуска графа Mediapipe, однако не имеет отношения к запуску ML моделей.
 
@@ -145,9 +298,49 @@ main.cpp для запуска графа
 
 Теперь рассмотрим, как с помощью Mediapipe запускать инференс моделей на разных устройствах. Дана обученная сеть, сконвертированная в tflite формат, обученная на ImageNet и классифицирующая на 1000 классов. Требуется написать программу для десктопа и смартфона (Android), запускающую данную сетку и выполняющую классификацию переданной фотографии. Пайплайн для запуска такого приложения можно собрать из стандартных калькуляторов, вот как он будет выглядеть:
 
-Входное изображение -> ImageTransformationCalculator-> TfLiteConverterCalculator -> TfLiteInferenceCalculator -> TfLiteTensorsToFloatsCalculator -> Вектор предсказаний
 
-TODO здесь текст этого файла.
+![Inference](inference_graph.png "Inference")
+
+```
+input_stream: "in"
+output_stream: "out"
+node: {
+  calculator: "ImageTransformationCalculator"
+  input_stream: "IMAGE:in"
+  output_stream: "IMAGE:transformed_input"
+  node_options: {
+    [type.googleapis.com/mediapipe.ImageTransformationCalculatorOptions] {
+      output_width: 224
+      output_height: 224
+    }
+  }
+}
+node {
+  calculator: "TfLiteConverterCalculator"
+  input_stream: "IMAGE:transformed_input"
+  output_stream: "TENSORS:image_tensor"
+  node_options: {
+      [type.googleapis.com/mediapipe.TfLiteConverterCalculatorOptions] {
+        zero_center: false
+      }
+  }
+}
+node {
+  calculator: "TfLiteInferenceCalculator"
+  input_stream: "TENSORS:image_tensor"
+  output_stream: "TENSORS:prediction_tensor"
+  node_options: {
+    [type.googleapis.com/mediapipe.TfLiteInferenceCalculatorOptions] {
+      model_path: "inference/mobilenetv2_imagenet.tflite"
+    }
+  }
+}
+node {
+  calculator: "TfLiteTensorsToFloatsCalculator"
+  input_stream: "TENSORS:prediction_tensor"
+  output_stream: "FLOATS:out"
+}
+```
 
 Граф содержит 4 узла: 
 
@@ -156,20 +349,122 @@ TODO здесь текст этого файла.
 1. Запуск модели.
 1. Преобразование выходного тезнора в вектор чисел. Вектор предсказаний будет отдан вызывающему коду.
 
-Вызывающий код для графа
+Теперь достаточно запустить граф и отправить в него данные, т.к. все части составленного графа уже реализованы.
 
-Пример как запустить на десктопе
+Запуск графа на десктопе похож на рассмотренный пример выше. Разница в предобработке входных данных и постобработке выходных. Ниже представлен код, загружающий фотографию, отправляющий ее в граф и выводящий индекс наиболее вероятного класса:
+
+```C++
+// Загрузка изображения
+auto img_mat = cv::imread("./inference/img.jpg");
+// Преобразование изображения в пакет
+auto input_frame = std::make_unique<mediapipe::ImageFrame>(
+    mediapipe::ImageFormat::SRGB, img_mat.cols, img_mat.rows,
+    mediapipe::ImageFrame::kDefaultAlignmentBoundary);
+cv::Mat input_frame_mat = mediapipe::formats::MatView(input_frame.get());
+img_mat.copyTo(input_frame_mat);
+auto frame = mediapipe::Adopt(input_frame.release()).At(mediapipe::Timestamp(0));
+// Отправка пакета в граф
+MP_RETURN_IF_ERROR(graph.AddPacketToInputStream("in", frame));
+MP_RETURN_IF_ERROR(graph.CloseInputStream("in"));
+// Получение результата их графа с выводом предсказания
+mediapipe::Packet packet;
+while (poller.Next(&packet)) {
+    auto predictions = packet.Get<std::vector<float>>();
+    int idx = std::max_element(predictions.begin(), predictions.end()) - predictions.begin();
+    std::cout << idx << std::endl;
+}
+```
+
+Теперь можно запустить код и проверить, что изображено на фотографии
+
+![img](img.jpg "img")
+
+```
+$ bazel-2.0.0 build --define MEDIAPIPE_DISABLE_GPU=1 //inference/desktop:Inference
 ...
-вставить скрин запуска
+INFO: Build completed successfully, 3 total actions
+$ ./bazel-bin/inference/desktop/InferenceINFO: Initialized TensorFlow Lite runtime.
+151
+```
 
-Пример как запустить на андроиде
-...
-вставить скрин запуска
+151 метка в ImageNet соответствует "Chihuahua"
 
+Теперь необходимо добиться того же поведения на смартфоне. Необходимо написать вызывающий код в Activity
 
-Полный код составленных примеров можно посмотреть на Github:
-TODO
+```kotlin
+class MainActivity : AppCompatActivity() {
+    val PICK_IMAGE = 1
+    var mpGraph: Graph? = null
+    var timestamp = 0L
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        this.setContentView(R.layout.activity_main)
+        val outputTv = findViewById<TextView>(R.id.outputTv)
+        val button = findViewById<Button>(R.id.selectButton)
+        AndroidAssetUtil.initializeNativeAssetManager(this)
+        // Загрузка и инициализация графа
+        // В данном случае граф преобразуется в бинарный формат
+        val graph = Graph()
+        assets.open("mobile_binary_graph.binarypb").use {
+            val graphBytes = it.readBytes()
+            graph.loadBinaryGraph(graphBytes)
+        }
+        // Подписка на выходной поток
+        graph.addPacketCallback("out") {
+            val res = PacketGetter.getFloat32Vector(it)
+            val label = res.indices.maxBy { i -> res[i] } ?: -1
+            this@MainActivity.runOnUiThread {
+                outputTv.text = label.toString()
+            }
+        }
+        graph.startRunningGraph()
+        // Кнопка для выбора изображения из галереи
+        button.setOnClickListener {
+            val intent = Intent()
+            intent.type = "image/*"
+            intent.action = Intent.ACTION_GET_CONTENT
+            startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE)
+        }
+        mpGraph = graph
+    }
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (requestCode == PICK_IMAGE) {
+            // Получение выбранного изображения из галереи и его отрисовка
+            val outputTv = findViewById<TextView>(R.id.outputTv)
+            val imageView = findViewById<ImageView>(R.id.imageView)
+            val uri = data?.data!!
+            // Отправка изображения в граф
+            val graph = mpGraph!!
+            val creator = AndroidPacketCreator(graph)
+            val stream = contentResolver.openInputStream(uri)
+            val bitmap = BitmapFactory.decodeStream(stream)
+            imageView.setImageBitmap(bitmap)
+            val packet = creator.createRgbImageFrame(bitmap)
+            graph.addPacketToInputStream("in", packet, timestamp)
+        }
+    }
+    companion object {
+        init {
+            // Загрузка нативной mediapipe библиотеки
+            System.loadLibrary("mediapipe_jni")
+        }
+    }
+}
+```
 
+Сборка приложение и его загрузка на смартфон для отладки
+
+```
+$ bazel-2.0.0 mobile-install --start_app -c opt --config=android_arm64 //inference/android/src/main/java/com/mediapipe_demonstration/inference:Inference
+```
+
+В приложении можно выбрать фото из галереи и предсказать, что же на фотографии изображено:
+
+![Android](android.jpg "android")
+
+Результат аналогичен.
+
+В данном разделе приведены только участки кода, полный код примеров можно посмотреть на [github](https://github.com/MaximKsh/mediapipe_examples)
 
 # Создание приложение с помощью Mediapipe
 
