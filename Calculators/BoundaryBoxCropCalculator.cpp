@@ -112,8 +112,6 @@ mediapipe::Status BoundaryBoxCropCalculator::Process(mediapipe::CalculatorContex
     const mediapipe::ImageFrame& image_frame = frames_packet.Get<mediapipe::ImageFrame>();
 
     const std::string& click_json = click_packet.Get<std::string>();
-    //__android_log_print(ANDROID_LOG_ERROR, "TRACKERS", "%s", click_json.c_str());
-    //__android_log_print(ANDROID_LOG_ERROR, "TRACKERS", "Detections count %d", detections.size());
     if (click_json == "{}") {
         return mediapipe::OkStatus();
     }
@@ -124,10 +122,6 @@ mediapipe::Status BoundaryBoxCropCalculator::Process(mediapipe::CalculatorContex
 
     if (detection.has_value()) {
         std::unique_ptr<mediapipe::ImageFrame> cropped_image = CropImage(image_frame, detection.value());
-
-     //   std::string cropped_image_json = cropped_image.ToJson();
-    // __android_log_print(ANDROID_LOG_ERROR, "TRACKERS", "CroppedImageJson %s", cropped_image_json.c_str());
-
         cc->Outputs().Get("", 0).Add(cropped_image.release(), cc->InputTimestamp());
     }
 

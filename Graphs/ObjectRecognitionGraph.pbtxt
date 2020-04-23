@@ -155,16 +155,16 @@ node {
 #input_stream: "INPUT_FRAME_GPU:image_frame_gpu"
 #input_stream: "SECOND:throttled_second_input"
 #output_stream: "LABELS_OUT:labels"
-node {
-  calculator: "DetectionToTextCalculator"
-  input_stream: "car_detections"
-  output_stream: "output_detections"
-}
+#node {
+#  calculator: "DetectionToTextCalculator"
+#  input_stream: "car_detections"
+#  output_stream: "output_detections"
+#}
 
 # Converts the detections to drawing primitives for annotation overlay.
 node {
   calculator: "DetectionsToRenderDataCalculator"
-  input_stream: "DETECTIONS:output_detections"
+  input_stream: "DETECTIONS:car_detections"
   output_stream: "RENDER_DATA:render_data"
   node_options: {
     [type.googleapis.com/mediapipe.DetectionsToRenderDataCalculatorOptions] {
@@ -195,7 +195,7 @@ node {
 
 # Crop image
 node {
-  calculator: "BoundaryBoxCropCalculator"
+      calculator: "BoundaryBoxCropCalculator"
   input_stream: "DETECTION:car_detections"
   input_stream: "IMAGE:image_frame_cpu"
   input_stream: "CLICK:throttled_click"

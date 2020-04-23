@@ -36,8 +36,7 @@ mediapipe::Status DetectionFilterCalculator::Open(mediapipe::CalculatorContext *
 }
 
 mediapipe::Status DetectionFilterCalculator::Process(mediapipe::CalculatorContext *cc) {
-    const auto& input_detections =
-            cc->Inputs().Get("", 0).Get<std::vector<::mediapipe::Detection>>();
+    const auto& input_detections =cc->Inputs().Get("", 0).Get<std::vector<::mediapipe::Detection>>();
     std::vector<::mediapipe::Detection> output_detections;
 
     for (const auto& input_detection : input_detections) {
