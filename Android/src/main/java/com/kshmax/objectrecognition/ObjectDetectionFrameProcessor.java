@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import com.google.gson.Gson;
+import com.kshmax.objectrecognition.proto.ClickLocationProto;
 
 /**
  * A {@link com.google.mediapipe.components.TextureFrameProcessor} that sends video frames through a
@@ -43,7 +44,7 @@ public class ObjectDetectionFrameProcessor implements TextureFrameProcessor {
   private final AtomicBoolean started = new AtomicBoolean(false);
   private boolean hybridPath = false;
 
-  private ConcurrentLinkedQueue<String> click_queue = new ConcurrentLinkedQueue<>();
+  private ConcurrentLinkedQueue<ClickLocationProto.ClickLocation> click_queue = new ConcurrentLinkedQueue<ClickLocationProto.ClickLocation>();
   private Gson gson = new Gson();
 
   /**
@@ -235,25 +236,25 @@ public class ObjectDetectionFrameProcessor implements TextureFrameProcessor {
       addFrameListener.onWillAddFrame(frame.getTimestamp());
     }
 
-    String click = click_queue.poll();
+    ClickLocationProto.ClickLocation click = click_queue.poll();
     if (click == null) {
-      click = "{}";
+      click = ClickLocationProto.ClickLocation.newBuilder().setX(-1).setY(-1).build();
     }
 
     Packet imagePacket = packetCreator.createGpuBuffer(frame);
-    Packet stringPacket = packetCreator.createString(click);
+    Packet clickPacket = packetCreator.createSerializedProto(click);
 
     try {
       // addConsumablePacketToInputStream allows the graph to take exclusive ownership of the
       // packet, which may allow for more memory optimizations.
       mediapipeGraph.addConsumablePacketToInputStream(videoInputStream, imagePacket, frame.getTimestamp());
-      mediapipeGraph.addConsumablePacketToInputStream("click", stringPacket, frame.getTimestamp());
+      mediapipeGraph.addConsumablePacketToInputStream("click", clickPacket, frame.getTimestamp());
 
     } catch (MediaPipeException e) {
       Log.e(TAG, "Mediapipe error: ", e);
     }
     imagePacket.release();
-    stringPacket.release();
+    clickPacket.release();
 
   }
 
@@ -293,9 +294,13 @@ public class ObjectDetectionFrameProcessor implements TextureFrameProcessor {
   }
 
   public void addClick(float x, float y) {
-    ClickLocation click_location = new ClickLocation(x, y);
-    String json = gson.toJson(click_location);
-    click_queue.add(json);
+    ClickLocationProto.ClickLocation loc = ClickLocationProto.ClickLocation
+            .newBuilder()
+            .setX(x)
+            .setY(y)
+            .build();
+
+    click_queue.add(loc);
   }
 
   /**

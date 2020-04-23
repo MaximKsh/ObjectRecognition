@@ -7,59 +7,7 @@
 #include "mediapipe/framework/formats/detection.pb.h"
 #include "mediapipe/framework/formats/image_frame.h"
 #include "Utils/Base64.h"
-
-struct ClickLocation {
-    float x;
-    float y;
-
-    static ClickLocation FromJson(const std::string& json) {
-        Poco::JSON::Parser parser;
-        auto json_object = parser.parse(json);
-        auto ptr = json_object.extract<Poco::JSON::Object::Ptr>();
-
-        ClickLocation click_location;
-        click_location.x = ptr->getValue<float>("x");
-        click_location.y = ptr->getValue<float>("y");
-        return click_location;
-    }
-
-    std::string ToJson() {
-        Poco::JSON::Object json_object;
-        json_object.set("x", x);
-        json_object.set("y", y);
-        std::ostringstream oss;
-        json_object.stringify(oss);
-        return oss.str();
-    }
-};
-
-struct CroppedImage {
-    std::string base64_pixels;
-    int width;
-    int height;
-
-    static CroppedImage FromJson(const std::string& json) {
-        Poco::JSON::Parser parser;
-        auto json_object = parser.parse(json);
-        auto ptr = json_object.extract<Poco::JSON::Object::Ptr>();
-
-        CroppedImage cropped_image;
-        cropped_image.base64_pixels = ptr->getValue<std::string>("base64_pixels");
-        cropped_image.width = ptr->getValue<float>("width");
-        cropped_image.height = ptr->getValue<float>("height");
-        return cropped_image;
-    }
-
-    std::string ToJson() {
-        Poco::JSON::Object json_object;
-        json_object.set("base64_pixels", base64_pixels);
-        json_object.set("width", width);
-        json_object.set("height", height);
-        std::ostringstream oss;
-        json_object.stringify(oss);
-        return oss.str();
-    }
-};
+#include "Calculators/ClickLocation.pb.h"
 
 class BoundaryBoxCropCalculator : public mediapipe::CalculatorBase {
 public:
@@ -71,7 +19,7 @@ public:
 
 private:
     static absl::optional<mediapipe::Detection> FindOverlappedDetection(
-            const ClickLocation& click_location,
+            const objectrecognition::ClickLocation& click_location,
             const std::vector<mediapipe::Detection>& detections);
 
     static std::unique_ptr<mediapipe::ImageFrame> CropImage(
@@ -84,7 +32,7 @@ REGISTER_CALCULATOR(BoundaryBoxCropCalculator);
 mediapipe::Status BoundaryBoxCropCalculator::GetContract(mediapipe::CalculatorContract *cc) {
     cc->Inputs().Get("DETECTION", 0).Set<std::vector<mediapipe::Detection>>();
     cc->Inputs().Get("IMAGE", 0).Set<mediapipe::ImageFrame>();
-    cc->Inputs().Get("CLICK", 0).Set<std::string>(); // ClickLocation model
+    cc->Inputs().Get("CLICK", 0).Set<std::string>(); // objectdetection::ClickLocation
 
     cc->Outputs().Get("", 0).Set<mediapipe::ImageFrame>();
 
@@ -111,16 +59,20 @@ mediapipe::Status BoundaryBoxCropCalculator::Process(mediapipe::CalculatorContex
             detections_packet.Get<std::vector<mediapipe::Detection>>();
     const mediapipe::ImageFrame& image_frame = frames_packet.Get<mediapipe::ImageFrame>();
 
-    const std::string& click_json = click_packet.Get<std::string>();
-    if (click_json == "{}") {
+    // Java код записывает сериализованный protobuf как строку, поэтому его нужно вручную разбирать.
+    auto click_location_str = click_packet.Get<std::string>();
+    objectrecognition::ClickLocation click_location;
+    click_location.ParseFromString(click_location_str);
+    // Нажатия не было, выходим без дальнейшей обработки
+    if (click_location.x() == -1 || click_location.y() == -1) {
         return mediapipe::OkStatus();
     }
 
-    ClickLocation click_location = ClickLocation::FromJson(click_json);
-
+    // Определение по какой рамке было нажатие
     absl::optional<mediapipe::Detection> detection = FindOverlappedDetection(click_location, detections);
 
     if (detection.has_value()) {
+        // если нажатие было по рамке, то изображение внутри рамки вырезается
         std::unique_ptr<mediapipe::ImageFrame> cropped_image = CropImage(image_frame, detection.value());
         cc->Outputs().Get("", 0).Add(cropped_image.release(), cc->InputTimestamp());
     }
@@ -129,13 +81,13 @@ mediapipe::Status BoundaryBoxCropCalculator::Process(mediapipe::CalculatorContex
 }
 
 absl::optional<mediapipe::Detection> BoundaryBoxCropCalculator::FindOverlappedDetection(
-        const ClickLocation& click_location,
+        const objectrecognition::ClickLocation& click_location,
         const std::vector<mediapipe::Detection>& detections) {
     for (const auto& input_detection : detections) {
         const auto& b_box = input_detection.location_data().relative_bounding_box();
 
-        if (b_box.xmin() < click_location.x && click_location.x < (b_box.xmin() + b_box.width())
-            && b_box.ymin() < click_location.y && click_location.y < (b_box.ymin() + b_box.height())) {
+        if (b_box.xmin() < click_location.x() && click_location.x() < (b_box.xmin() + b_box.width())
+            && b_box.ymin() < click_location.y() && click_location.y() < (b_box.ymin() + b_box.height())) {
             return input_detection;
         }
     }
@@ -183,11 +135,6 @@ std::unique_ptr<mediapipe::ImageFrame> BoundaryBoxCropCalculator::CropImage(
     std::unique_ptr<mediapipe::ImageFrame> cropped_image = std::make_unique<mediapipe::ImageFrame>();
     cropped_image->CopyPixelData(image_frame.Format(), width, height, pixels.data(),
             mediapipe::ImageFrame::kDefaultAlignmentBoundary);
-
-//    CroppedImage cropped_image;
-//    cropped_image.width = width;
-//    cropped_image.height = height;
-//    cropped_image.base64_pixels = Base64::Encode(pixels);
 
     return cropped_image;
 }

@@ -3,6 +3,18 @@ load("@mediapipe_repository//mediapipe/framework/port:build_config.bzl", "mediap
 package(default_visibility = ["//visibility:public"])
 
 proto_library(
+    name = "click_location_proto",
+    srcs = ["ClickLocation.proto"],
+    visibility = ["//visibility:public"],
+)
+
+cc_proto_library(
+    name = "click_location_cc_proto",
+    visibility = ["//visibility:public"],
+    deps = [":click_location_proto"],
+)
+
+proto_library(
     name = "detection_filter_calculator_proto",
     srcs = ["DetectionFilterCalculator.proto"],
     visibility = ["//visibility:public"],
@@ -98,6 +110,7 @@ cc_library(
         "//visibility:public",
     ],
     deps = [
+        ":click_location_cc_proto",
         "//ThirdParty:poco",
         "//Utils:base64",
         "@mediapipe_repository//mediapipe/framework:calculator_framework",

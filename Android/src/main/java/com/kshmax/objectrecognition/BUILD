@@ -2,6 +2,11 @@ package(default_visibility = ["//visibility:public"])
 
 load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kt_android_library")
 
+java_lite_proto_library(
+    name = "click_location_java_proto",
+    deps = ["//Calculators:click_location_proto"],
+)
+
 cc_binary(
     name = "libmediapipe_jni.so",
     linkshared = 1,
@@ -51,6 +56,7 @@ kt_android_library(
         "@mediapipe_repository//third_party:opencv",
     ],
     deps = [
+        ":click_location_java_proto",
         "@androidx_concurrent_futures//jar",
         "@com_google_guava_android//jar",
         "@maven//:androidx_appcompat_appcompat",

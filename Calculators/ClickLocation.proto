@@ -1,0 +1,11 @@
+syntax = "proto2";
+
+package objectrecognition;
+
+option java_package = "com.kshmax.objectrecognition.proto";
+option java_outer_classname = "ClickLocationProto";
+
+message ClickLocation {
+    required float x = 1;
+    required float y = 2;
+}
