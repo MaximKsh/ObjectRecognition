@@ -6,6 +6,8 @@ import android.content.Context
 import android.graphics.SurfaceTexture
 import android.os.AsyncTask
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Size
 import android.view.*
 import android.widget.EditText
@@ -125,6 +127,9 @@ class MainActivity : AppCompatActivity() {
     // Handles camera access via the {@link CameraX} Jetpack support library.
     private var cameraHelper: CameraXPreviewHelper? = null
 
+    private var lastTime: Long = 0
+    private var lastTapTime: Long = 0
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         this.setContentView(R.layout.activity_main)
@@ -158,11 +163,26 @@ class MainActivity : AppCompatActivity() {
             (it as TextView).text = ""
         }
 
+        val desc_time = this@MainActivity.findViewById<TextView>(R.id.descriptor_time_textview)
         objectDetectionFrameProcessor.addPacketCallback("car_vector") {
-            // This is CroppedImage into JSON. It can be deserialized but it is redundant
+            Handler(Looper.getMainLooper()).post {
+                desc_time.text = (System.currentTimeMillis() - lastTapTime).toString()
+            }
+
             val car = PacketGetter.getFloat32Vector(it)
             val descriptor = CarDescriptor(car)
             RecognitionRequestTask(getUrl(), tv).execute(descriptor)
+        }
+
+        val fps = this@MainActivity.findViewById<TextView>(R.id.fps_textview)
+        objectDetectionFrameProcessor.addPacketCallback("output_video") {
+            val time = System.currentTimeMillis()
+            val currentFps = (1000 / (time - lastTime)).toInt().toString()
+            lastTime = time
+
+            Handler(Looper.getMainLooper()).post {
+                fps.text = currentFps
+            }
         }
 
         processor = objectDetectionFrameProcessor
@@ -216,6 +236,7 @@ class MainActivity : AppCompatActivity() {
         val displayView = previewDisplayView!!
         displayView.setOnTouchListener { view, event ->
             if (event.action == MotionEvent.ACTION_DOWN) {
+                lastTapTime = System.currentTimeMillis()
                 val relativeX = event.x / view.width
                 val relativeY = event.y / view.height
                 this@MainActivity.processor!!.addClick(relativeX, relativeY)

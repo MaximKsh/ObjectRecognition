@@ -52,7 +52,7 @@ kt_android_library(
     exports = [
         ":mediapipe_jni_lib",
         "//ThirdParty:libc",
-        "//ThirdParty:poco",
+        #"//ThirdParty:poco",
         "@mediapipe_repository//third_party:opencv",
     ],
     deps = [

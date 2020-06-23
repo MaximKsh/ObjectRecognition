@@ -1,12 +1,9 @@
 #include <android/log.h>
-#include <Poco/JSON/Object.h>
-#include <Poco/JSON/Parser.h>
 #include "mediapipe//framework/packet.h"
 #include "mediapipe/framework/calculator_framework.h"
 #include "mediapipe/framework/port/status.h"
 #include "mediapipe/framework/formats/detection.pb.h"
 #include "mediapipe/framework/formats/image_frame.h"
-#include "Utils/Base64.h"
 #include "Calculators/ClickLocation.pb.h"
 
 class BoundaryBoxCropCalculator : public mediapipe::CalculatorBase {

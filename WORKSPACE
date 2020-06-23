@@ -389,17 +389,17 @@ http_archive(
 
 # END mediapipe
 
-new_local_repository(
-    name = "poco_linux",
-    build_file = "//ThirdParty:poco_linux.BUILD",
-    path = "/usr",
-)
-
-new_local_repository(
-    name = "poco_android",
-    build_file = "//ThirdParty:poco_android.BUILD",
-    path = "/home/maxim/Projects/poco",
-)
+#new_local_repository(
+#    name = "poco_linux",
+#    build_file = "//ThirdParty:poco_linux.BUILD",
+#    path = "/usr",
+#)
+#
+#new_local_repository(
+#    name = "poco_android",
+#    build_file = "//ThirdParty:poco_android.BUILD",
+#    path = "/home/maxim/Projects/poco",
+#)
 
 new_local_repository(
     name = "libc_android",

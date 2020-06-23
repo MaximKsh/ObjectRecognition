@@ -12,9 +12,9 @@ cc_library(
     deps = [
         "//Calculators:boundary_box_crop_calculator",
         "//Calculators:detection_filter_calculator",
-        "//Calculators:detection_to_text_calculator",
-        "//Calculators:echo_calculator",
-        "//Calculators:label_provider_calculator",
+#        "//Calculators:detection_to_text_calculator",
+#        "//Calculators:echo_calculator",
+#        "//Calculators:label_provider_calculator",
         "@mediapipe_repository//mediapipe/calculators/core:flow_limiter_calculator",
         "@mediapipe_repository//mediapipe/calculators/image:image_transformation_calculator",
         "@mediapipe_repository//mediapipe/calculators/tflite:ssd_anchors_calculator",

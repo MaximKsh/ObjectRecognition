@@ -15,17 +15,54 @@
         android:gravity="center"
         android:text="Car model will be displayed here"
         android:textSize="26dp"/>
+
     <FrameLayout
-        android:id="@+id/preview_display_layout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="0dp"
         android:layout_weight="1">
 
+        <FrameLayout
+            android:id="@+id/preview_display_layout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1">
+
+            <TextView
+                android:id="@+id/no_camera_access_view"
+                android:layout_height="fill_parent"
+                android:layout_width="fill_parent"
+                android:gravity="center"
+                android:text="no_camera_access" />
+        </FrameLayout>
+
         <TextView
-            android:id="@+id/no_camera_access_view"
-            android:layout_height="fill_parent"
-            android:layout_width="fill_parent"
-            android:gravity="center"
-            android:text="no_camera_access" />
+            android:id="@+id/fps_textview"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="start|top"
+
+            android:padding="12dip"
+
+            android:background="#00000000"
+            android:textColor="#ffff0000"
+            android:textSize="26dp"
+
+            android:text="FPS" />
+
+        <TextView
+            android:id="@+id/descriptor_time_textview"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end|top"
+
+            android:padding="12dip"
+
+            android:background="#00000000"
+            android:textColor="#ffff0000"
+            android:textSize="26dp"
+
+            android:text="desc" />
     </FrameLayout>
+
+
 </LinearLayout>

@@ -49,19 +49,19 @@ cc_library(
     alwayslink = 1,
 )
 
-cc_library(
-    name = "detection_to_text_calculator",
-    srcs = ["DetectionToTextCalculator.cpp"],
-    visibility = ["//visibility:public"],
-    deps = [
-        "//ThirdParty:poco",
-        "@mediapipe_repository//mediapipe/framework:calculator_framework",
-        "@mediapipe_repository//mediapipe/framework:packet",
-        "@mediapipe_repository//mediapipe/framework/formats:detection_cc_proto",
-        "@mediapipe_repository//mediapipe/framework/port:status",
-    ],
-    alwayslink = 1,
-)
+#cc_library(
+#    name = "detection_to_text_calculator",
+#    srcs = ["DetectionToTextCalculator.cpp"],
+#    visibility = ["//visibility:public"],
+#    deps = [
+#        "//ThirdParty:poco",
+#        "@mediapipe_repository//mediapipe/framework:calculator_framework",
+#        "@mediapipe_repository//mediapipe/framework:packet",
+#        "@mediapipe_repository//mediapipe/framework/formats:detection_cc_proto",
+#        "@mediapipe_repository//mediapipe/framework/port:status",
+#    ],
+#    alwayslink = 1,
+#)
 
 cc_library(
     name = "echo_calculator",
@@ -75,33 +75,33 @@ cc_library(
     ],
     alwayslink = 1,
 )
-
-cc_library(
-    name = "http_test_calculator",
-    srcs = ["HttpTestCalculator.cpp"],
-    visibility = [
-        "//visibility:public",
-    ],
-    deps = [
-        "//ThirdParty:poco",
-        "@mediapipe_repository//mediapipe/framework:calculator_framework",
-        "@mediapipe_repository//mediapipe/framework/port:status",
-    ],
-    alwayslink = 1,
-)
-
-cc_library(
-    name = "label_provider_calculator",
-    srcs = ["LabelProviderCalculator.cpp"],
-    visibility = [
-        "//visibility:public",
-    ],
-    deps = [
-        "@mediapipe_repository//mediapipe/framework:calculator_framework",
-        "@mediapipe_repository//mediapipe/framework/port:status",
-    ],
-    alwayslink = 1,
-)
+#
+#cc_library(
+#    name = "http_test_calculator",
+#    srcs = ["HttpTestCalculator.cpp"],
+#    visibility = [
+#        "//visibility:public",
+#    ],
+#    deps = [
+#        "//ThirdParty:poco",
+#        "@mediapipe_repository//mediapipe/framework:calculator_framework",
+#        "@mediapipe_repository//mediapipe/framework/port:status",
+#    ],
+#    alwayslink = 1,
+#)
+#
+#cc_library(
+#    name = "label_provider_calculator",
+#    srcs = ["LabelProviderCalculator.cpp"],
+#    visibility = [
+#        "//visibility:public",
+#    ],
+#    deps = [
+#        "@mediapipe_repository//mediapipe/framework:calculator_framework",
+#        "@mediapipe_repository//mediapipe/framework/port:status",
+#    ],
+#    alwayslink = 1,
+#)
 
 cc_library(
     name = "boundary_box_crop_calculator",
@@ -111,8 +111,8 @@ cc_library(
     ],
     deps = [
         ":click_location_cc_proto",
-        "//ThirdParty:poco",
-        "//Utils:base64",
+        #"//ThirdParty:poco",
+        #"//Utils:base64",
         "@mediapipe_repository//mediapipe/framework:calculator_framework",
         "@mediapipe_repository//mediapipe/framework/formats:detection_cc_proto",
         "@mediapipe_repository//mediapipe/framework/port:status",
